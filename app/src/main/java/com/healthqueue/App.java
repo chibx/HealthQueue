@@ -11,10 +11,14 @@ public class App {
     }
 
     public static void main(String[] args) {
+        final String PORT = System.getenv("PORT");
+
+        if (PORT != null) {
+            int port = Integer.parseInt(PORT);
+            Spark.port(port);
+        }
 
         Spark.path("/api", () -> {
-            Spark.before("", ((request, response) -> {
-            }));
             Spark.path("/auth", () -> {
                 Spark.get("/login", Auth::Login);
                 Spark.get("/register", Auth::Register);
