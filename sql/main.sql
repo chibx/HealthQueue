@@ -22,12 +22,16 @@ CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE organization_requests (
+    email TEXT NOT NULL,
     registration_code VARCHAR(100) UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 3. BRANCHES (Hospital Branches/Clinics)
--- Uses BIGINT for your Java Snowflake class. 
 CREATE TABLE branches (
     id BIGINT PRIMARY KEY,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -39,7 +43,6 @@ CREATE TABLE branches (
 );
 
 -- 4. DOCTORS / MEDICAL OFFICERS
--- Uses BIGINT. Tied to a specific branch.
 CREATE TABLE doctors (
     id BIGINT PRIMARY KEY,
     branch_id BIGINT NOT NULL REFERENCES branches(id) ON DELETE CASCADE,
@@ -51,7 +54,6 @@ CREATE TABLE doctors (
 );
 
 -- 5. APPOINTMENTS & QUEUE MANAGEMENT
--- Highly transactional, perfect for Snowflake BIGINTs. 
 CREATE TABLE appointments (
     id BIGINT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -77,7 +79,8 @@ CREATE TABLE clinic_visits (
     recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- INDEXES for performance optimization
+
+CREATE INDEX idx_organization_requests ON organization_requests(email);
 CREATE INDEX idx_users_location ON users(latitude, longitude);
 CREATE INDEX idx_branches_location ON branches(latitude, longitude);
 CREATE INDEX idx_appointments_user ON appointments(user_id);
