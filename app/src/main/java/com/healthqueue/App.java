@@ -39,7 +39,10 @@ public class App {
             Spark.port(port);
         }
 
-        Spark.get("/healthz", (req, res) -> "OK");
+        Spark.get("/healthz", (req, res) -> {
+            res.type("text/plain");
+            return "OK";
+        });
 
         Spark.path("/api", () -> {
             // This middleware correctly protects EVERYTHING under /api/*
