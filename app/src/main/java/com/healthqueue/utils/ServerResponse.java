@@ -10,6 +10,6 @@ public class ServerResponse {
     public record StructuredError400(int status, String message, ValidationError[] errors) {
     }
 
-    public record StructuredErrorAny(int status, String message, ValidationError[] errors) {
+    public record StructuredErrorAny(int status, String message) {
     }
 }
