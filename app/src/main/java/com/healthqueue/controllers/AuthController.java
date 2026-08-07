@@ -3,13 +3,23 @@ package com.healthqueue.controllers;
 import spark.Request;
 import spark.Response;
 
-public class Auth {
-    public static Object Register(Request req, Response res) {
+public class AuthController {
+    public static Object RegisterPatient(Request req, Response res) {
 
         return 2;
     }
 
-    public static Object Login(Request req, Response res) {
+    public static Object LoginPatient(Request req, Response res) {
+
+        return 2;
+    }
+
+    public static Object RegisterOrganization(Request req, Response res) {
+
+        return 2;
+    }
+
+    public static Object LoginOrganization(Request req, Response res) {
 
         return 2;
     }
