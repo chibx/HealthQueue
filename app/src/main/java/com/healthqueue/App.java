@@ -19,6 +19,7 @@ public class App {
     public static void main(String[] args) {
         final String PORT = System.getenv("PORT");
 
+        Spark.port(3000);
         if (PORT != null) {
             int port = Integer.parseInt(PORT);
             Spark.port(port);
