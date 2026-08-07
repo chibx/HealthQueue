@@ -7,6 +7,8 @@ import com.healthqueue.controllers.DoctorController;
 import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
+import com.healthqueue.utils.Constants;
+import com.healthqueue.utils.Utils;
 
 import spark.Spark;
 
@@ -20,6 +22,18 @@ public class App {
         final String PORT = System.getenv("PORT");
 
         Spark.port(3000);
+
+        Spark.exception(Exception.class, (exception, req, res) -> {
+            try {
+                String errorBody = Utils.structuredResponse(res,
+                        Constants.STATUS_UNAUTHORIZED,
+                        Constants.UNAUTHORIZED);
+                Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
+            } catch (Exception e) {
+                Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
+            }
+        });
+
         if (PORT != null) {
             int port = Integer.parseInt(PORT);
             Spark.port(port);
