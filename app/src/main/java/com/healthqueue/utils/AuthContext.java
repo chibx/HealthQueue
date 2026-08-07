@@ -1,22 +1,32 @@
 package com.healthqueue.utils;
 
+import org.jspecify.annotations.Nullable;
+
+import io.jsonwebtoken.Claims;
+
 public class AuthContext {
-    public static enum CtxType {
-        Patient("patient"),
-        Organization("organization");
-
-        private final String text;
-
-        CtxType(final String text) {
-            this.text = text;
-        }
-
-        @Override
-        public String toString() {
-            return text;
-        }
+    public static record UserCtx(String uuid, String type) {
     }
 
-    public static record UserCtx(String uuid, CtxType type) {
+    public static UserCtx getUserCtxFromClaims(Claims claims) {
+        if (claims == null) {
+            return null;
+        }
+
+        final @Nullable String uuid = claims.get("uuid", String.class);
+        final @Nullable String type = claims.get("type", String.class);
+
+        if (uuid == null || type == null) {
+            return null;
+        }
+
+        boolean isUUIDValid = Utils.isValidUUID(uuid);
+        if (!isUUIDValid) {
+            return null;
+        }
+
+        final UserCtx userCtx = new UserCtx(uuid, type);
+
+        return userCtx;
     }
 }
