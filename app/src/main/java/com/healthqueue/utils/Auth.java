@@ -1,5 +1,6 @@
 package com.healthqueue.utils;
 
+import com.healthqueue.utils.Utils.GoReturn;
 import com.password4j.Password;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

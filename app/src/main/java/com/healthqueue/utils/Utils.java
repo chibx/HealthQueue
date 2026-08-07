@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.f4b6a3.uuid.UuidCreator;
+import com.github.f4b6a3.uuid.exception.InvalidUuidException;
 import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
 import jakarta.validation.ConstraintViolation;
@@ -17,9 +19,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
-record GoReturn<T>(T value, Throwable error) {
-}
-
 public class Utils {
     public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final Logger logger = LoggerFactory.getLogger(Constants.APP_NAME);
@@ -30,6 +29,9 @@ public class Utils {
     private static final long NODE_ID = 1L; // bump per instance if you ever run more than one node
     private static long sequence = 0L;
     private static long lastTimestamp = -1L;
+
+    public record GoReturn<T>(T value, Throwable error) {
+    }
 
     public static synchronized long nextSnowflakeId() {
         long timestamp = System.currentTimeMillis();
@@ -103,6 +105,15 @@ public class Utils {
                 + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
                         * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    public static boolean isValidUUID(String uuid) {
+        try {
+            UuidCreator.fromString(uuid);
+            return true;
+        } catch (InvalidUuidException e) {
+            return false;
+        }
     }
 
     /**
