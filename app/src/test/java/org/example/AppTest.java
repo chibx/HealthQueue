@@ -4,9 +4,9 @@
 package org.example;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+// import static org.junit.jupiter.api.Assertions.*;
 
-import com.healthqueue.App;
+// import com.healthqueue.App;
 
 class AppTest {
     @Test
