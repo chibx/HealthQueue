@@ -72,6 +72,16 @@ def dbPassword = secrets.getProperty('dbPassword', System.getenv('DB_PASSWORD') 
 def dbUser = secrets.getProperty('dbUser', System.getenv('DB_USER') ?: 'postgres')
 def jdbcUrl = secrets.getProperty('jdbcUrl', System.getenv('JDBC_URL') ?: '')
 
+def jooqGeneratedDir = 'src/generated/java'
+
+sourceSets {
+    main {
+        java {
+            srcDir jooqGeneratedDir
+        }
+    }
+}
+
 jooq {
     version = '3.21.6'
     edition = nu.studer.gradle.jooq.JooqEdition.OSS
@@ -99,7 +109,7 @@ jooq {
                     }
                     target {
                         packageName = 'com.healthqueue.db'
-                        directory = 'build/generated-src/jooq/main'
+                        directory = jooqGeneratedDir
                     }
                 }
             }
