@@ -8,6 +8,9 @@ import io.jsonwebtoken.Jwts;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+
+import org.jspecify.annotations.Nullable;
+
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -47,8 +50,7 @@ public class Auth {
         });
     }
 
-    @SuppressWarnings("null")
-    public static GoReturn<String> decrypt(String encryptedPayload, SecretKey key) {
+    public static GoReturn<@Nullable String> decrypt(String encryptedPayload, SecretKey key) {
         return Utils.tryGo(() -> {
             String[] parts = encryptedPayload.split(":");
             if (parts.length != 3) {
@@ -74,7 +76,7 @@ public class Auth {
 
     private static final String SAFE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-    public static GoReturn<String> generateRandomSafeString(int length) {
+    public static GoReturn<@Nullable String> generateRandomSafeString(int length) {
         return Utils.tryGo(() -> {
             int alphabetLength = SAFE_ALPHABET.length();
             int maxValidByte = 256 - (256 % alphabetLength);

@@ -1,6 +1,7 @@
 // Utils.java
 package com.healthqueue.utils;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,7 @@ public class Utils {
     private static long sequence = 0L;
     private static long lastTimestamp = -1L;
 
-    public record GoReturn<T>(T value, Throwable error) {
+    public record GoReturn<T>(@Nullable T value, @Nullable Throwable error) {
     }
 
     public static synchronized long nextSnowflakeId() {
@@ -78,7 +79,7 @@ public class Utils {
 
     public static <T> String structuredResponse(spark.Response res, int status, String message) throws Exception {
         res.type("application/json");
-        StructuredResponse<T> resp = new StructuredResponse<>(status, message, (T) null);
+        StructuredResponse<T> resp = new StructuredResponse<>(status, message, null);
         return MAPPER.writeValueAsString(resp);
     }
 
@@ -120,7 +121,6 @@ public class Utils {
      * Wraps an async function so its CompletableFuture never fails outright —
      * it always resolves to GoReturn(value, null) or GoReturn(null, error).
      */
-    @SuppressWarnings("null")
     public static <A, T> Function<A, CompletableFuture<GoReturn<T>>> tryGoErrFuture(
             Function<A, CompletableFuture<T>> fn) {
         return arg -> fn.apply(arg).handle((result, error) -> error == null
@@ -132,6 +132,7 @@ public class Utils {
      * Converts a GoReturn-shaped future back into a normal future that fails on
      * error.
      */
+    @SuppressWarnings("null")
     public static <T> CompletableFuture<T> throwGoError(CompletableFuture<GoReturn<T>> future) {
         return future.thenApply(r -> {
             if (r.error() != null) {
@@ -141,7 +142,6 @@ public class Utils {
         });
     }
 
-    @SuppressWarnings("null")
     public static <T> GoReturn<T> tryGo(java.util.concurrent.Callable<T> fn) {
         try {
             return new GoReturn<>(fn.call(), null);
