@@ -12,6 +12,9 @@ import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -30,6 +33,13 @@ public class Utils {
     private static final long NODE_ID = 1L; // bump per instance if you ever run more than one node
     private static long sequence = 0L;
     private static long lastTimestamp = -1L;
+
+    public final static Validator validator;
+
+    static {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
 
     public record GoReturn<T>(@Nullable T value, @Nullable Throwable error) {
     }
