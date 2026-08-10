@@ -4,6 +4,7 @@ import com.healthqueue.controllers.AuthController;
 // Assuming you will create these controller classes:
 import com.healthqueue.controllers.BranchController;
 import com.healthqueue.controllers.DoctorController;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
@@ -13,11 +14,6 @@ import com.healthqueue.utils.Utils;
 import spark.Spark;
 
 public class App {
-
-    public String getGreeting() {
-        return "Hello World!";
-    }
-
     public static void main(String[] args) {
         final String PORT = System.getenv("PORT");
 
@@ -25,10 +21,13 @@ public class App {
 
         Spark.exception(Exception.class, (exception, req, res) -> {
             try {
-                String errorBody = Utils.structuredResponse(res,
-                        Constants.STATUS_UNAUTHORIZED,
-                        Constants.UNAUTHORIZED);
-                Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
+                res.type("application/json");
+                if (exception instanceof DatabindException) {
+                    String errorBody = Utils.structuredResponse(
+                            Constants.STATUS_BAD_REQUEST,
+                            Constants.BAD_REQUEST);
+                    Spark.halt(Constants.STATUS_BAD_REQUEST, errorBody);
+                }
             } catch (Exception e) {
                 Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
             }
@@ -45,8 +44,11 @@ public class App {
         });
 
         Spark.path("/api", () -> {
-            // This middleware correctly protects EVERYTHING under /api/*
-            Spark.before("/*", Middlewares::InjectAuthCtx);
+            Spark.before("/*", (request, response) -> {
+                // Note: this may or may not be necessary in your particular application
+                response.type("application/json");
+                Middlewares.InjectAuthCtx(request, response);
+            });
 
             // AUTHENTICATION ROUTES
             Spark.path("/auth", () -> {

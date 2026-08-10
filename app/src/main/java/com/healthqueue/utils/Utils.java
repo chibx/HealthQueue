@@ -5,6 +5,7 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.f4b6a3.uuid.exception.InvalidUuidException;
@@ -41,7 +42,7 @@ public class Utils {
         validator = factory.getValidator();
     }
 
-    public record GoReturn<T>(@Nullable T value, @Nullable Throwable error) {
+    public record GoReturn<T>(T value, Throwable error) {
     }
 
     public static synchronized long nextSnowflakeId() {
@@ -87,15 +88,16 @@ public class Utils {
         return date != null ? date.toString() : null;
     }
 
-    public static <T> String structuredResponse(spark.Response res, int status, String message) throws Exception {
-        res.type("application/json");
-        StructuredResponse<T> resp = new StructuredResponse<>(status, message, null);
-        return MAPPER.writeValueAsString(resp);
+    public static String structuredResponse(int status, String message) throws Exception {
+        // res.type("application/json");
+        // StructuredResponse<T> resp = new StructuredResponse<>(status, message, null);
+        // return MAPPER.writeValueAsString(resp);
+        return structuredResponse(status, message, null);
     }
 
-    public static <T> String structuredResponse(spark.Response res, int status, String message, T data)
+    public static <T> String structuredResponse(int status, String message, T data)
             throws Exception {
-        res.type("application/json");
+        // res.type("application/json");
         StructuredResponse<T> resp = new StructuredResponse<>(status, message, data);
         return MAPPER.writeValueAsString(resp);
     }
@@ -131,7 +133,7 @@ public class Utils {
      * Wraps an async function so its CompletableFuture never fails outright —
      * it always resolves to GoReturn(value, null) or GoReturn(null, error).
      */
-    public static <A, T> Function<A, CompletableFuture<GoReturn<T>>> tryGoErrFuture(
+    public static <A, T> Function<A, CompletableFuture<GoReturn<@Nullable T>>> tryGoErrFuture(
             Function<A, CompletableFuture<T>> fn) {
         return arg -> fn.apply(arg).handle((result, error) -> error == null
                 ? new GoReturn<>(result, null)
@@ -142,7 +144,6 @@ public class Utils {
      * Converts a GoReturn-shaped future back into a normal future that fails on
      * error.
      */
-    @SuppressWarnings("null")
     public static <T> CompletableFuture<T> throwGoError(CompletableFuture<GoReturn<T>> future) {
         return future.thenApply(r -> {
             if (r.error() != null) {
@@ -152,7 +153,7 @@ public class Utils {
         });
     }
 
-    public static <T> GoReturn<T> tryGo(java.util.concurrent.Callable<T> fn) {
+    public static <T> GoReturn<@Nullable T> tryGo(java.util.concurrent.Callable<T> fn) {
         try {
             return new GoReturn<>(fn.call(), null);
         } catch (Exception e) {
@@ -165,5 +166,9 @@ public class Utils {
     // JS.
     private static Throwable unwrap(Throwable t) {
         return (t instanceof CompletionException && t.getCause() != null) ? t.getCause() : t;
+    }
+
+    public static <T> T fromJSON(String body, Class<T> class1) throws JsonProcessingException {
+        return MAPPER.readValue(body, class1);
     }
 }

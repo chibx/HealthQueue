@@ -38,6 +38,9 @@ public class ServerResponse {
         // AUTHENTICATION RESPONSES
         // ==========================================
 
+        public record WhoamiResponse(String user, String org) {
+        }
+
         public record AuthResponse(
                         @JsonProperty("token") String token,
                         @JsonProperty("id") String id, // Can be UUID for user/org

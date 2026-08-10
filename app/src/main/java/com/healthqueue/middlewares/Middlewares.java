@@ -22,7 +22,7 @@ public class Middlewares {
             GoReturn<Claims> ret = Auth.verifyJWT(orgCookie, null);
             if (ret.error() != null) {
                 try {
-                    String errorBody = Utils.structuredResponse(res, Constants.STATUS_UNAUTHORIZED,
+                    String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
                             Constants.UNAUTHORIZED);
                     Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
                 } catch (Exception e) {
@@ -39,18 +39,38 @@ public class Middlewares {
             GoReturn<Claims> ret = Auth.verifyJWT(customerCookie, null);
             if (ret.error() != null) {
                 try {
-                    String errorBody = Utils.structuredResponse(res, Constants.STATUS_UNAUTHORIZED,
+                    String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
                             Constants.UNAUTHORIZED);
                     Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
                 } catch (Exception e) {
                     Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
                 }
             }
-            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value());
-            if (userCtx != null) {
-                req.attribute(Constants.USER_CTX, userCtx);
+            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value());
+            if (orgCtx != null) {
+                req.attribute(Constants.USER_CTX, orgCtx);
             }
 
         }
+    }
+
+    public static void enableCORS(final String origin, final String methods, final String headers) {
+        Spark.before((request, response) -> {
+            response.header("Access-Control-Allow-Origin", origin);
+            response.header("Access-Control-Request-Method", methods);
+            response.header("Access-Control-Allow-Headers", headers);
+        });
+
+        Spark.options("/*", (request, response) -> {
+            String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
+            if (accessControlRequestHeaders != null) {
+                response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+            }
+            String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
+            if (accessControlRequestMethod != null) {
+                response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+            }
+            return "OK";
+        });
     }
 }

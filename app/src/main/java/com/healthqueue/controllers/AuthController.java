@@ -1,12 +1,23 @@
 package com.healthqueue.controllers;
 
+import static com.healthqueue.utils.ServerRequest.*;
+
+import com.healthqueue.utils.Constants;
+import com.healthqueue.utils.ServerResponse;
+
+import com.healthqueue.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.healthqueue.utils.AuthContext.UserCtx;
 import spark.Request;
 import spark.Response;
 
 public class AuthController {
-    public static Object RegisterPatient(Request req, Response res) {
+    public static Object RegisterPatient(Request req, Response res) throws JsonProcessingException {
+        PatientSignupRequest body = Utils.fromJSON(req.body(), PatientSignupRequest.class);
 
-        return 2;
+        System.out.println("Email: " + body.email());
+
+        return 0;
     }
 
     public static Object LoginPatient(Request req, Response res) {
@@ -34,8 +45,13 @@ public class AuthController {
         return 2;
     }
 
-    public static Object Whoami(Request req, Response res) {
+    public static Object Whoami(Request req, Response res) throws JsonProcessingException {
+        UserCtx tmpUser = req.attribute(Constants.USER_CTX);
+        UserCtx tmpOrg = req.attribute(Constants.ORG_CTX);
 
-        return 2;
+        String user = tmpUser != null ? tmpUser.uuid() : null;
+        String org = tmpOrg != null ? tmpOrg.uuid() : null;
+
+        return Utils.MAPPER.writeValueAsString(new ServerResponse.WhoamiResponse(user, org));
     }
 }
