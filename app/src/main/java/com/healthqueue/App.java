@@ -17,7 +17,7 @@ public class App {
     public static void main(String[] args) {
         final String PORT = System.getenv("PORT");
 
-        Spark.port(3000);
+        Spark.port(PORT != null ? Integer.parseInt(PORT) : 3000);
 
         Spark.exception(Exception.class, (exception, req, res) -> {
             try {
@@ -32,11 +32,6 @@ public class App {
                 Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
             }
         });
-
-        if (PORT != null) {
-            int port = Integer.parseInt(PORT);
-            Spark.port(port);
-        }
 
         Spark.get("/healthz", (req, res) -> {
             res.type("text/plain");
