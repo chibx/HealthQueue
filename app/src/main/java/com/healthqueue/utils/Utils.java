@@ -25,7 +25,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 public class Utils {
-    public static final ObjectMapper MAPPER = new ObjectMapper();
+    public static final ObjectMapper MAPPER;
     public static final Logger logger = LoggerFactory.getLogger(Constants.APP_NAME);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
@@ -40,6 +40,10 @@ public class Utils {
     static {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
+    }
+
+    static {
+        MAPPER = new ObjectMapper();
     }
 
     public record GoReturn<T>(T value, Throwable error) {
