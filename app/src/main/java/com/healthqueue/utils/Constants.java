@@ -28,6 +28,7 @@ public class Constants {
 
     public static final int MIN_PASSWORD_LENGTH = 8;
     public static final int MAX_PASSWORD_LENGTH = 40;
+    public static final int REFRESH_TOKEN_LENGTH = 32;
 
     public static final int MINUTE_1 = 60 * 1000;
     public static final int MINUTES_5 = 5 * MINUTE_1;
