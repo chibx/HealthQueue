@@ -1,6 +1,11 @@
 // Utils.java
 package com.healthqueue.utils;
 
+import static com.healthqueue.utils.Constants.*;
+
+import org.jooq.DSLContext;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,16 +22,22 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 public class Utils {
-    public static final ObjectMapper MAPPER;
-    public static final Logger logger = LoggerFactory.getLogger(Constants.APP_NAME);
+    public static final ObjectMapper MAPPER = new ObjectMapper();
+    private static DSLContext dsl;
+    public static final Logger Logger = LoggerFactory.getLogger(Constants.APP_NAME);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
     // sequence ---
@@ -38,15 +49,37 @@ public class Utils {
     public final static Validator validator;
 
     static {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(JDBC_URL);
+        config.setUsername(DB_USER);
+        config.setPassword(DB_PASSWORD);
+
+        // Pool settings
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(2);
+
+        HikariDataSource dataSource = new HikariDataSource(config);
+
+        dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
+    }
+
+    static {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
         validator = factory.getValidator();
     }
 
-    static {
-        MAPPER = new ObjectMapper();
+    public static DSLContext getDSL() {
+        return dsl;
     }
 
-    public record GoReturn<T>(T value, Throwable error) {
+    public static class GoReturn<T> {
+        public final T value;
+        public final Throwable error;
+
+        GoReturn(T value, Throwable error) {
+            this.value = value;
+            this.error = error;
+        }
     }
 
     public static synchronized long nextSnowflakeId() {
@@ -78,6 +111,10 @@ public class Utils {
         return value;
     }
 
+    public Connection getDBConn() throws SQLException {
+        return DriverManager.getConnection(JDBC_URL, DB_USER, DB_PASSWORD);
+    }
+
     public static Instant addToDate(long ms) {
         return addToDate(ms, null);
     }
@@ -106,8 +143,8 @@ public class Utils {
         return MAPPER.writeValueAsString(resp);
     }
 
-    public static List<ServerResponse.ValidationError> toValidationErrors(ConstraintViolationException ex) {
-        List<ServerResponse.ValidationError> errors = new ArrayList<>();
+    public static ArrayList<ServerResponse.ValidationError> toValidationErrors(ConstraintViolationException ex) {
+        ArrayList<ServerResponse.ValidationError> errors = new ArrayList<>();
         for (ConstraintViolation<?> v : ex.getConstraintViolations()) {
             errors.add(new ServerResponse.ValidationError(v.getPropertyPath().toString(), v.getMessage()));
         }
@@ -150,10 +187,10 @@ public class Utils {
      */
     public static <T> CompletableFuture<T> throwGoError(CompletableFuture<GoReturn<T>> future) {
         return future.thenApply(r -> {
-            if (r.error() != null) {
-                throw (r.error() instanceof RuntimeException re) ? re : new CompletionException(r.error());
+            if (r.error != null) {
+                throw (r.error instanceof RuntimeException re) ? re : new CompletionException(r.error);
             }
-            return r.value();
+            return r.value;
         });
     }
 

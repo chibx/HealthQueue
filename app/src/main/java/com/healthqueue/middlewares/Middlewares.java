@@ -20,7 +20,7 @@ public class Middlewares {
 
         if (orgCookie != null) {
             GoReturn<Claims> ret = Auth.verifyJWT(orgCookie, null);
-            if (ret.error() != null) {
+            if (ret.error != null) {
                 try {
                     String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
                             Constants.UNAUTHORIZED);
@@ -29,7 +29,7 @@ public class Middlewares {
                     Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
                 }
             }
-            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value());
+            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value);
             if (userCtx != null) {
                 req.attribute(Constants.ORG_CTX, userCtx);
             }
@@ -37,7 +37,7 @@ public class Middlewares {
 
         if (customerCookie != null) {
             GoReturn<Claims> ret = Auth.verifyJWT(customerCookie, null);
-            if (ret.error() != null) {
+            if (ret.error != null) {
                 try {
                     String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
                             Constants.UNAUTHORIZED);
@@ -46,7 +46,7 @@ public class Middlewares {
                     Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
                 }
             }
-            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value());
+            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
             if (orgCtx != null) {
                 req.attribute(Constants.USER_CTX, orgCtx);
             }

@@ -2,6 +2,7 @@ package com.healthqueue.utils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.jspecify.annotations.Nullable;
@@ -26,7 +27,7 @@ public class ServerResponse {
         public record StructuredError400(
                         @JsonProperty("status") int status,
                         @JsonProperty("message") String message,
-                        @JsonProperty("errors") ValidationError[] errors) {
+                        @JsonProperty("errors") ArrayList<ValidationError> errors) {
         }
 
         public record StructuredErrorAny(

@@ -4,13 +4,10 @@ import com.healthqueue.controllers.AuthController;
 // Assuming you will create these controller classes:
 import com.healthqueue.controllers.BranchController;
 import com.healthqueue.controllers.DoctorController;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
-import com.healthqueue.utils.Constants;
-import com.healthqueue.utils.Utils;
-
+import com.healthqueue.utils.ExceptionHandler;
 import spark.Spark;
 
 public class App {
@@ -19,19 +16,7 @@ public class App {
 
         Spark.port(PORT != null ? Integer.parseInt(PORT) : 3000);
 
-        Spark.exception(Exception.class, (exception, req, res) -> {
-            try {
-                res.type("application/json");
-                if (exception instanceof DatabindException) {
-                    String errorBody = Utils.structuredResponse(
-                            Constants.STATUS_BAD_REQUEST,
-                            Constants.BAD_REQUEST);
-                    Spark.halt(Constants.STATUS_BAD_REQUEST, errorBody);
-                }
-            } catch (Exception e) {
-                Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
-            }
-        });
+        Spark.exception(Exception.class, ExceptionHandler::handle);
 
         Spark.get("/healthz", (req, res) -> {
             res.type("text/plain");
