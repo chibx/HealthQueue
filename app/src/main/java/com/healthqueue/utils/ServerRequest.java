@@ -1,6 +1,9 @@
 package com.healthqueue.utils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -21,8 +24,8 @@ public class ServerRequest {
                         @Email @JsonProperty("email") String email,
                         @NotBlank @Size(min = 8, max = 15) @JsonProperty("phoneNumber") String phoneNumber,
                         @NotBlank @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH) @JsonProperty("password") String password,
-                        @NotNull @JsonProperty("latitude") Double latitude,
-                        @NotNull @JsonProperty("longitude") Double longitude) {
+                        @NotNull @JsonProperty("latitude") @DecimalMin(value = "-90.0", message = "Latitude must be >= -90.0") @DecimalMax(value = "90.0", message = "Latitude must be <= 90.0") Double latitude,
+                        @NotNull @JsonProperty("longitude") @DecimalMin(value = "-180.0", message = "Longitude must be >= -180.0") @DecimalMax(value = "180.0", message = "Longitude must be <= 180.0") Double longitude) {
         }
 
         public static record PatientLoginRequest(
