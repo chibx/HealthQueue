@@ -15,7 +15,7 @@ import spark.Spark;
 public class Middlewares {
 
     public static void InjectAuthCtx(Request req, Response res) {
-        String customerCookie = req.cookie(Constants.CUSTOMER_ACCESS_COOKIE);
+        String customerCookie = req.cookie(Constants.PATIENT_ACCESS_COOKIE);
         String orgCookie = req.cookie(Constants.ORG_ACCESS_COOKIE);
 
         if (orgCookie != null) {
