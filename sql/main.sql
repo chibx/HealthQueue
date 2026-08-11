@@ -22,7 +22,26 @@ CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE org_refresh_tokens (
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    token TEXT NOT NULL,
+    ip TEXT NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE user_refresh_tokens (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL,
+    ip TEXT NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE organization_requests (
@@ -80,6 +99,8 @@ CREATE TABLE clinic_visits (
 );
 
 
+CREATE INDEX idx_user_refresh_token ON user_refresh_tokens(user_id);
+CREATE INDEX idx_org_refresh_token ON org_refresh_tokens(organization_id);
 CREATE INDEX idx_organization_requests ON organization_requests(email);
 CREATE INDEX idx_users_location ON users(latitude, longitude);
 CREATE INDEX idx_branches_location ON branches(latitude, longitude);
