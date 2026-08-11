@@ -1,14 +1,18 @@
 package com.healthqueue.utils;
 
+import java.util.UUID;
+
 import org.jspecify.annotations.Nullable;
+
+import com.github.f4b6a3.uuid.UuidCreator;
 
 import io.jsonwebtoken.Claims;
 
 public class AuthContext {
-    public static record UserCtx(String uuid, String type) {
+    public static record UserCtx(UUID uuid, String type) {
     }
 
-    public static UserCtx getUserCtxFromClaims(Claims claims) {
+    public static @Nullable UserCtx getUserCtxFromClaims(Claims claims) {
         if (claims == null) {
             return null;
         }
@@ -25,7 +29,7 @@ public class AuthContext {
             return null;
         }
 
-        final UserCtx userCtx = new UserCtx(uuid, type);
+        final UserCtx userCtx = new UserCtx(UuidCreator.fromString(uuid), type);
 
         return userCtx;
     }
