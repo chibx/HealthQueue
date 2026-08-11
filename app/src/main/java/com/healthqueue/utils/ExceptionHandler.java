@@ -19,9 +19,9 @@ public class ExceptionHandler {
             }
             if (exception instanceof ServerError) {
                 Spark.halt(
-                        ((ServerError) exception).status,
+                        ((ServerError) exception).getStatusCode(),
                         Utils.structuredResponse(
-                                ((ServerError) exception).status,
+                                ((ServerError) exception).getStatusCode(),
                                 exception.getMessage()));
             }
         } catch (Exception e) {
