@@ -20,14 +20,18 @@ import java.util.Map;
 
 public class Auth {
 
-    private static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     private static final int IV_LENGTH_BYTES = 12;
     private static final int GCM_TAG_LENGTH_BITS = 128;
+    public static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
+    public static final String HMAC256_ALGORITHM = "HmacSHA256";
 
     // Base64 string form — safe as text, used as the Argon2 pepper
-    public static final String SECRET_KEY_B64 = Utils.getEnv("SECRET_KEY");
-    // Decoded byte form — used as AES key material
-    public static final byte[] SECRET_KEY = Base64.getDecoder().decode(SECRET_KEY_B64);
+    public static final String HS256_SECRET_STRING = Utils.getEnv(Constants.SECRET_KEY);
+    // public static final byte[] HS256_SECRET_BYTE =
+    // Base64.getDecoder().decode(HS256_SECRET_STRING);
+
+    public static final String AES_SECRET_STRING = Utils.getEnv(Constants.SECRET_KEY);
+    public static final byte[] AES_SECRET_BYTE = Base64.getDecoder().decode(AES_SECRET_STRING);
 
     public static GoReturn<String> encrypt(String text, SecretKey key) {
         return Utils.tryGo(() -> {
@@ -102,7 +106,7 @@ public class Auth {
 
     public static GoReturn<String> hashText(String text) {
         return Utils.tryGo(() -> Password.hash(text)
-                .addPepper(SECRET_KEY_B64)
+                .addPepper(HS256_SECRET_STRING)
                 .addRandomSalt()
                 .withArgon2()
                 .getResult());
@@ -110,7 +114,7 @@ public class Auth {
 
     public static GoReturn<Boolean> verifyHash(String hashedText, String password) {
         return Utils.tryGo(() -> Password.check(password, hashedText)
-                .addPepper(SECRET_KEY_B64)
+                .addPepper(HS256_SECRET_STRING)
                 .withArgon2());
     }
 

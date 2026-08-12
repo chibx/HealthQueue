@@ -4,34 +4,21 @@ import com.healthqueue.controllers.AuthController;
 // Assuming you will create these controller classes:
 import com.healthqueue.controllers.BranchController;
 import com.healthqueue.controllers.DoctorController;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
-import com.healthqueue.utils.Constants;
+import com.healthqueue.utils.ExceptionHandler;
 import com.healthqueue.utils.Utils;
 
 import spark.Spark;
 
 public class App {
     public static void main(String[] args) {
-        final String PORT = System.getenv("PORT");
+        final String PORT = Utils.getEnv("PORT", "3000");
 
-        Spark.port(PORT != null ? Integer.parseInt(PORT) : 3000);
+        Spark.port(Integer.parseInt(PORT));
 
-        Spark.exception(Exception.class, (exception, req, res) -> {
-            try {
-                res.type("application/json");
-                if (exception instanceof DatabindException) {
-                    String errorBody = Utils.structuredResponse(
-                            Constants.STATUS_BAD_REQUEST,
-                            Constants.BAD_REQUEST);
-                    Spark.halt(Constants.STATUS_BAD_REQUEST, errorBody);
-                }
-            } catch (Exception e) {
-                Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
-            }
-        });
+        Spark.exception(Exception.class, ExceptionHandler::handle);
 
         Spark.get("/healthz", (req, res) -> {
             res.type("text/plain");
@@ -50,12 +37,13 @@ public class App {
                 // Separated patient and organization auth flows
                 Spark.post("/patient/register", AuthController::RegisterPatient);
                 Spark.post("/patient/login", AuthController::LoginPatient);
+                Spark.post("/patient/refresh", AuthController::RefreshPatient);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
+                Spark.post("/organization/refresh", AuthController::RefreshOrganization);
 
                 Spark.post("/logout", AuthController::Logout);
-                Spark.post("/refresh", AuthController::Refresh);
                 Spark.get("/whoami", AuthController::Whoami);
             });
 
