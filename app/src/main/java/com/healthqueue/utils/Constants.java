@@ -12,6 +12,8 @@ public class Constants {
     public static final String ORG_ACCESS_COOKIE = "org_access_tk";
     public static final String ORG_REFRESH_COOKIE = "org_refresh_tk";
 
+    public static final String SECRET_KEY = "SECRET_KEY";
+
     public static final int STATUS_OK = 200;
     public static final int STATUS_BAD_REQUEST = 400;
     public static final int STATUS_UNAUTHORIZED = 401;
