@@ -1,29 +1,40 @@
 package com.healthqueue.controllers;
 
-import static com.healthqueue.utils.Constants.INTERNAL_ERROR;
-import static com.healthqueue.utils.Constants.STATUS_INTERNAL_ERROR;
-import static com.healthqueue.utils.ServerRequest.*;
+import static com.healthqueue.utils.Constants.*;
+import static com.healthqueue.db.Tables.ORGANIZATIONS;
+import static com.healthqueue.db.Tables.ORGANIZATION_REQUESTS;
+import static com.healthqueue.db.Tables.ORG_REFRESH_TOKENS;
 import static com.healthqueue.db.Tables.USERS;
+import static com.healthqueue.db.Tables.USER_REFRESH_TOKENS;
 
+import com.healthqueue.db.tables.pojos.Organizations;
 import com.healthqueue.db.tables.pojos.Users;
 import com.healthqueue.utils.Auth;
 import com.healthqueue.utils.AuthContext.UserCtx;
-import com.healthqueue.utils.Constants;
 import com.healthqueue.utils.ServerError;
+import com.healthqueue.utils.ServerRequest.OrganizationLoginRequest;
+import com.healthqueue.utils.ServerRequest.OrganizationSignupRequest;
+import com.healthqueue.utils.ServerRequest.PatientLoginRequest;
+import com.healthqueue.utils.ServerRequest.PatientSignupRequest;
 import com.healthqueue.utils.ServerResponse;
 import com.healthqueue.utils.Utils;
 import com.healthqueue.utils.Utils.GoReturn;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.f4b6a3.uuid.UuidCreator;
 
-import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolation;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
 import org.jooq.DSLContext;
+import org.jooq.Record1;
 import org.jooq.exception.DataAccessException;
 import org.jspecify.annotations.Nullable;
 
@@ -33,234 +44,461 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class AuthController {
 
-    private static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(), "");
-    private static final SecretKey AES_SECRET = new SecretKeySpec(Auth.AES_SECRET_BYTE, Auth.CIPHER_ALGORITHM);
+        private static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
+                        Auth.HMAC256_ALGORITHM);
+        // private static final SecretKey AES_SECRET = new
+        // SecretKeySpec(Auth.AES_SECRET_BYTE, Auth.CIPHER_ALGORITHM);
 
-    public static Object RegisterPatient(Request req, Response res) throws Exception {
-        try {
-            final DSLContext dsl = Utils.getDSL();
-            PatientSignupRequest body = Utils.fromJSON(req.body(), PatientSignupRequest.class);
-            Utils.validator.validate(body);
+        public static Object RegisterPatient(Request request, Response response) throws Exception {
+                final DSLContext dsl = Utils.getDSL();
 
-            GoReturn<String> hashResult = Auth.hashText(body.password());
-            if (hashResult.error != null) {
-                Utils.Logger.error("Error hashing password: {}", hashResult.error.getMessage());
-                throw new ServerError(
-                        Constants.STATUS_INTERNAL_ERROR,
-                        Utils.structuredResponse(
-                                Constants.STATUS_INTERNAL_ERROR,
-                                Constants.INTERNAL_ERROR));
-            }
-            String passwordHash = hashResult.value;
+                String ipAddr = request.ip();
+                PatientSignupRequest body = Utils.fromJSON(request.body(), PatientSignupRequest.class);
+                Set<ConstraintViolation<PatientSignupRequest>> violations = Utils.validate(body);
+                if (!violations.isEmpty()) {
+                        throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+                }
 
-            UUID newUserId = UuidCreator.getTimeOrderedEpoch();
+                GoReturn<String> hashResult = Auth.hashText(body.password());
+                if (hashResult.error != null) {
+                        Utils.Logger.error("Error hashing password: {}", hashResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+                String passwordHash = hashResult.value;
 
-            @Nullable
-            Users newUser = dsl.insertInto(USERS)
-                    .set(USERS.ID, newUserId)
-                    .set(USERS.FIRST_NAME, body.firstName())
-                    .set(USERS.LAST_NAME, body.lastName())
-                    .set(USERS.EMAIL, body.email())
-                    .set(USERS.PASSWORD_HASH, passwordHash)
-                    .set(USERS.LATITUDE, BigDecimal.valueOf(body.latitude()))
-                    .set(USERS.LONGITUDE, BigDecimal.valueOf(body.longitude()))
-                    .returningResult(USERS.ID, USERS.FIRST_NAME, USERS.LAST_NAME, USERS.EMAIL)
-                    .fetchOne()
-                    .into(Users.class);
+                UUID newUserId = UuidCreator.getTimeOrderedEpoch();
 
-            if (newUser == null) {
-                throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
-            }
+                @Nullable
+                Users newUser;
 
-            Map<String, Object> claims = Map.of(
-                    "uuid", newUser.getId().toString(),
-                    "type", "patient");
+                try {
+                        newUser = dsl.insertInto(USERS)
+                                        .set(USERS.ID, newUserId)
+                                        .set(USERS.FIRST_NAME, body.firstName())
+                                        .set(USERS.LAST_NAME, body.lastName())
+                                        .set(USERS.EMAIL, body.email())
+                                        .set(USERS.PASSWORD_HASH, passwordHash)
+                                        .set(USERS.LATITUDE, BigDecimal.valueOf(body.latitude()))
+                                        .set(USERS.LONGITUDE, BigDecimal.valueOf(body.longitude()))
+                                        .returningResult(USERS.ID, USERS.FIRST_NAME, USERS.LAST_NAME, USERS.EMAIL)
+                                        .fetchOne()
+                                        .into(Users.class);
+                } catch (DataAccessException dae) {
+                        if (dae.getMessage() != null && dae.getMessage()
+                                        .contains("duplicate key value violates unique constraint \"users_email_key\"")) {
+                                throw new ServerError(STATUS_BAD_REQUEST, "Account with this email already exists");
 
-            GoReturn<String> accessJwtResult = Auth.signJWT(
-                    claims,
-                    HS256_SECRET,
-                    Constants.MINUTES_30);
-            if (accessJwtResult.error != null) {
-                Utils.Logger.error("Error signing access JWT: {}",
-                        accessJwtResult.error.getMessage());
-                throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
-            }
+                        }
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, dae);
+                }
 
-            GoReturn<String> refreshJwtResult = Auth.signJWT(
-                    claims,
-                    HS256_SECRET,
-                    Constants.DAYS_7);
-            if (refreshJwtResult.error != null) {
-                Utils.Logger.error("Error signing refresh JWT: {}",
-                        refreshJwtResult.error.getMessage());
-                throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                if (newUser == null) {
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
 
-            }
+                Map<String, Object> claims = Map.of(
+                                "uuid", newUser.getId().toString(),
+                                "type", "patient");
 
-            GoReturn<String> encryptedRefreshCookie = Auth.encrypt(
-                    refreshJwtResult.value,
-                    AES_SECRET);
-            if (encryptedRefreshCookie.error != null) {
-                Utils.Logger.error(
-                        "Error encrypting refresh cookie: {}",
-                        encryptedRefreshCookie.error.getMessage());
-                throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
-            }
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}", accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
 
-            res.cookie(
-                    Constants.CUSTOMER_REFRESH_COOKIE,
-                    encryptedRefreshCookie.value,
-                    Constants.DAYS_7 / 1000,
-                    true,
-                    false);
+                String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-            return Utils.structuredResponse(
-                    Constants.STATUS_OK,
-                    Constants.RESPONSE_OK,
-                    new ServerResponse.AuthResponse(
-                            accessJwtResult.value,
-                            newUser.getId().toString(),
-                            "patient"));
-        } catch (ConstraintViolationException cve) {
-            res.status(Constants.STATUS_BAD_REQUEST);
-            return Utils.MAPPER.writeValueAsString(new ServerResponse.StructuredError400(
-                    Constants.STATUS_BAD_REQUEST,
-                    Constants.BAD_REQUEST,
-                    Utils.toValidationErrors(cve)));
-        } catch (DataAccessException dae) {
-            if (dae.getMessage() != null && dae.getMessage()
-                    .contains("duplicate key value violates unique constraint \"users_email_key\"")) {
-                throw new ServerError(Constants.STATUS_BAD_REQUEST,
-                        Utils.structuredResponse(Constants.STATUS_BAD_REQUEST,
-                                "Account with this email already exists"));
+                dsl.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
+                                USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
+                                .values(newUser.getId(), refreshToken, ipAddr,
+                                                OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                ZoneId.systemDefault()))
+                                .execute();
 
-            }
-            throw dae;
+                response.cookie(
+                                ORG_ACCESS_COOKIE,
+                                accessJwtResult.value,
+                                MINUTES_30 / 1000,
+                                true,
+                                false);
+                response.cookie(
+                                PATIENT_REFRESH_COOKIE,
+                                refreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+
+                return null;
         }
-    }
 
-    public static Object LoginPatient(Request req, Response res) throws Exception {
-        try {
-            PatientLoginRequest body = Utils.fromJSON(req.body(), PatientLoginRequest.class);
-            Utils.validator.validate(body);
+        public static Object LoginPatient(Request request, Response response) throws Exception {
+                final DSLContext dsl = Utils.getDSL();
 
-            final DSLContext dsl = Utils.getDSL();
-            @Nullable
-            Users user = dsl.selectFrom(USERS)
-                    .where(USERS.EMAIL.eq(body.email()))
-                    .fetchOneInto(Users.class);
+                String ipAddr = request.ip();
+                PatientLoginRequest body = Utils.fromJSON(request.body(), PatientLoginRequest.class);
+                Set<ConstraintViolation<PatientLoginRequest>> violations = Utils.validate(body);
+                if (!violations.isEmpty()) {
+                        throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+                }
 
-            if (user == null) {
-                throw new ServerError(Constants.STATUS_UNAUTHORIZED, Utils.structuredResponse(
-                        Constants.STATUS_UNAUTHORIZED, Constants.UNAUTHORIZED));
-            }
+                @Nullable
+                Users user = dsl.selectFrom(USERS)
+                                .where(USERS.EMAIL.eq(body.email()))
+                                .fetchOneInto(Users.class);
 
-            GoReturn<Boolean> verifyResult = Auth.verifyHash(user.getPasswordHash(), body.password());
-            if (verifyResult.error != null || !verifyResult.value) {
-                throw new ServerError(Constants.STATUS_UNAUTHORIZED, Utils.structuredResponse(
-                        Constants.STATUS_UNAUTHORIZED, Constants.UNAUTHORIZED));
-            }
+                if (user == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
 
-            Map<String, Object> claims = Map.of(
-                    "uuid", user.getId().toString(),
-                    "type", "patient");
+                GoReturn<Boolean> verifyResult = Auth.verifyHash(user.getPasswordHash(), body.password());
+                if (verifyResult.error != null || !verifyResult.value) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
 
-            GoReturn<String> accessJwtResult = Auth.signJWT(
-                    claims,
-                    HS256_SECRET,
-                    Constants.MINUTES_30);
-            if (accessJwtResult.error != null) {
-                Utils.Logger.error("Error signing access JWT: {}",
-                        accessJwtResult.error.getMessage());
-                throw new ServerError(
-                        Constants.STATUS_INTERNAL_ERROR,
-                        Utils.structuredResponse(
-                                Constants.STATUS_INTERNAL_ERROR,
-                                Constants.INTERNAL_ERROR));
-            }
+                Map<String, Object> claims = Map.of(
+                                "uuid", user.getId().toString(),
+                                "type", "patient");
 
-            GoReturn<String> refreshJwtResult = Auth.signJWT(
-                    claims,
-                    HS256_SECRET,
-                    Constants.DAYS_7);
-            if (refreshJwtResult.error != null) {
-                Utils.Logger.error("Error signing refresh JWT: {}",
-                        refreshJwtResult.error.getMessage());
-                throw new ServerError(
-                        Constants.STATUS_INTERNAL_ERROR,
-                        Utils.structuredResponse(
-                                Constants.STATUS_INTERNAL_ERROR,
-                                Constants.INTERNAL_ERROR));
-            }
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}",
+                                        accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
 
-            GoReturn<String> encryptedRefreshCookie = Auth.encrypt(
-                    refreshJwtResult.value,
-                    AES_SECRET);
-            if (encryptedRefreshCookie.error != null) {
-                Utils.Logger.error(
-                        "Error encrypting refresh cookie: {}",
-                        encryptedRefreshCookie.error.getMessage());
-                throw new ServerError(
-                        Constants.STATUS_INTERNAL_ERROR,
-                        Utils.structuredResponse(
-                                Constants.STATUS_INTERNAL_ERROR,
-                                Constants.INTERNAL_ERROR));
-            }
+                String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-            res.cookie(
-                    Constants.CUSTOMER_REFRESH_COOKIE,
-                    encryptedRefreshCookie.value,
-                    Constants.DAYS_7 / 1000,
-                    true,
-                    false);
+                dsl.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
+                                USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
+                                .values(user.getId(), refreshToken, ipAddr,
+                                                OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                ZoneId.systemDefault()))
+                                .execute();
 
-            return Utils.structuredResponse(
-                    Constants.STATUS_OK,
-                    Constants.RESPONSE_OK,
-                    new ServerResponse.AuthResponse(
-                            accessJwtResult.value,
-                            user.getId().toString(),
-                            "patient"));
-        } catch (ConstraintViolationException cve) {
-            res.status(Constants.STATUS_BAD_REQUEST);
-            return Utils.MAPPER.writeValueAsString(new ServerResponse.StructuredError400(
-                    Constants.STATUS_BAD_REQUEST,
-                    Constants.BAD_REQUEST,
-                    Utils.toValidationErrors(cve)));
-        } catch (Exception e) {
-            Utils.Logger.error("LoginPatient error: {}", e.getMessage());
-            throw new ServerError(Constants.STATUS_INTERNAL_ERROR, Utils
-                    .structuredResponse(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR));
+                response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
+                                true,
+                                false);
+                response.cookie(
+                                PATIENT_REFRESH_COOKIE,
+                                refreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+
+                return null;
         }
-    }
 
-    public static Object RegisterOrganization(Request req, Response res) {
+        public static Object RegisterOrganization(Request request, Response response) throws Exception {
+                final DSLContext dsl = Utils.getDSL();
 
-        return 2;
-    }
+                String ipAddr = request.ip();
+                OrganizationSignupRequest body = Utils.fromJSON(request.body(), OrganizationSignupRequest.class);
+                Set<ConstraintViolation<OrganizationSignupRequest>> violations = Utils.validate(body);
 
-    public static Object LoginOrganization(Request req, Response res) {
+                if (!violations.isEmpty()) {
+                        throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+                }
 
-        return 2;
-    }
+                Record1<String> orgRecord = dsl.select(ORGANIZATION_REQUESTS.REGISTRATION_CODE)
+                                .from(ORGANIZATION_REQUESTS)
+                                .where(ORGANIZATION_REQUESTS.EMAIL.eq(body.email())).fetchOne();
+                String orgCode = orgRecord.get(ORGANIZATION_REQUESTS.REGISTRATION_CODE);
+                if (orgCode == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, "Invalid Registration Code");
+                }
 
-    public static Object Refresh(Request req, Response res) {
+                GoReturn<String> hashResult = Auth.hashText(body.password());
+                if (hashResult.error != null) {
+                        Utils.Logger.error("Error hashing password: {}", hashResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+                String passwordHash = hashResult.value;
 
-        return 2;
-    }
+                UUID newOrgId = UuidCreator.getTimeOrderedEpoch();
 
-    public static Object Logout(Request req, Response res) {
+                @Nullable
+                Organizations newOrg;
 
-        return 2;
-    }
+                try {
+                        newOrg = dsl.insertInto(ORGANIZATIONS)
+                                        .set(ORGANIZATIONS.ID, newOrgId)
+                                        .set(ORGANIZATIONS.NAME, body.name())
+                                        .set(ORGANIZATIONS.EMAIL, body.email())
+                                        .set(ORGANIZATIONS.PASSWORD_HASH, passwordHash)
+                                        .returningResult(ORGANIZATIONS.ID, ORGANIZATIONS.NAME, ORGANIZATIONS.EMAIL)
+                                        .fetchOneInto(Organizations.class);
+                } catch (DataAccessException dae) {
+                        if (dae.getMessage() != null && dae.getMessage()
+                                        .contains("duplicate key value violates unique constraint \"organizations_email_key\"")) {
+                                throw new ServerError(STATUS_BAD_REQUEST, "Account with this email already exists");
 
-    public static Object Whoami(Request req, Response res) throws JsonProcessingException {
-        UserCtx tmpUser = req.attribute(Constants.USER_CTX);
-        UserCtx tmpOrg = req.attribute(Constants.ORG_CTX);
+                        }
+                        if (dae.getMessage() != null && dae.getMessage()
+                                        .contains(
+                                                        "duplicate key value violates unique constraint \"organization_requests_registration_code_key\"")) {
+                                throw new ServerError(STATUS_BAD_REQUEST,
+                                                "Organization with this registration code already exists");
+                        }
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, dae);
+                }
 
-        String user = tmpUser != null ? tmpUser.uuid() : null;
-        String org = tmpOrg != null ? tmpOrg.uuid() : null;
+                if (newOrg == null) {
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
 
-        return Utils.MAPPER.writeValueAsString(new ServerResponse.WhoamiResponse(user, org));
-    }
+                Map<String, Object> claims = Map.of(
+                                "uuid", newOrg.getId().toString(),
+                                "type", "organization");
+
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}",
+                                        accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+
+                String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
+
+                dsl.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
+                                ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
+                                .values(newOrg.getId(), refreshToken, ipAddr,
+                                                OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                ZoneId.systemDefault()))
+                                .execute();
+
+                response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
+                                true,
+                                false);
+
+                response.cookie(
+                                ORG_REFRESH_COOKIE,
+                                refreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+
+                return null;
+        }
+
+        public static Object LoginOrganization(Request request, Response response) throws Exception {
+                final DSLContext dsl = Utils.getDSL();
+
+                String ipAddr = request.ip();
+                OrganizationLoginRequest body = Utils.fromJSON(request.body(), OrganizationLoginRequest.class);
+                Set<ConstraintViolation<OrganizationLoginRequest>> violations = Utils.validate(body);
+                if (!violations.isEmpty()) {
+                        throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+                }
+
+                @Nullable
+                Organizations org = dsl.selectFrom(ORGANIZATIONS)
+                                .where(ORGANIZATIONS.EMAIL.eq(body.email()))
+                                .fetchOneInto(Organizations.class);
+
+                if (org == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                GoReturn<Boolean> verifyResult = Auth.verifyHash(org.getPasswordHash(), body.password());
+                if (verifyResult.error != null || !verifyResult.value) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                Map<String, Object> claims = Map.of(
+                                "uuid", org.getId().toString(),
+                                "type", "organization");
+
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}",
+                                        accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+
+                String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
+
+                dsl.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
+                                ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
+                                .values(org.getId(), refreshToken, ipAddr,
+                                                OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                ZoneId.systemDefault()))
+                                .execute();
+
+                response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
+                                true,
+                                false);
+
+                response.cookie(
+                                ORG_REFRESH_COOKIE,
+                                refreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+
+                return Utils.structuredResponse(
+                                STATUS_OK,
+                                RESPONSE_OK,
+                                new ServerResponse.AuthResponse(
+                                                accessJwtResult.value,
+                                                org.getId().toString(),
+                                                "organization"));
+        }
+
+        public static Object RefreshPatient(Request request, Response response) throws Exception {
+                DSLContext dsl = Utils.getDSL();
+
+                String ipAddr = request.ip();
+                @Nullable
+                UserCtx userCtx = request.attribute(USER_CTX);
+                if (userCtx == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                boolean userExists = dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(userCtx.uuid())));
+                if (!userExists) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                @Nullable
+                String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
+                if (refreshToken == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+                String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
+                dsl.transaction((ctx) -> {
+                        DSLContext innerDSL = ctx.dsl();
+
+                        innerDSL.update(USER_REFRESH_TOKENS).set(USER_REFRESH_TOKENS.USED, true)
+                                        .where(USER_REFRESH_TOKENS.USER_ID.eq(userCtx.uuid()),
+                                                        USER_REFRESH_TOKENS.TOKEN.eq(refreshToken))
+                                        .execute();
+                        innerDSL.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
+                                        USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
+                                        .values(userCtx.uuid(), newRefreshToken, ipAddr,
+                                                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                        ZoneId.systemDefault()))
+                                        .execute();
+                });
+
+                Map<String, Object> claims = Map.of(
+                                "uuid", userCtx.uuid(),
+                                "type", userCtx.type());
+
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}",
+                                        accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+
+                response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
+                                true,
+                                false);
+
+                response.cookie(PATIENT_REFRESH_COOKIE,
+                                newRefreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+
+                return null;
+        }
+
+        public static Object RefreshOrganization(Request request, Response response) {
+                DSLContext dsl = Utils.getDSL();
+
+                String ipAddr = request.ip();
+
+                @Nullable
+                UserCtx orgCtx = request.attribute(ORG_CTX);
+                if (orgCtx == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                boolean orgExists = dsl
+                                .fetchExists(dsl.selectOne().from(ORGANIZATIONS)
+                                                .where(ORGANIZATIONS.ID.eq(orgCtx.uuid())));
+                if (!orgExists) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+
+                @Nullable
+                String refreshToken = request.cookie(ORG_REFRESH_COOKIE);
+                if (refreshToken == null) {
+                        throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+                }
+                String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
+                dsl.transaction((ctx) -> {
+                        DSLContext innerDSL = ctx.dsl();
+
+                        innerDSL.update(ORG_REFRESH_TOKENS).set(ORG_REFRESH_TOKENS.USED, true)
+                                        .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
+                                                        ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
+                                        .execute();
+                        innerDSL.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID,
+                                        ORG_REFRESH_TOKENS.TOKEN,
+                                        ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
+                                        .values(orgCtx.uuid(), newRefreshToken, ipAddr,
+                                                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
+                                                                        ZoneId.systemDefault()))
+                                        .execute();
+                });
+
+                Map<String, Object> claims = Map.of(
+                                "uuid", orgCtx.uuid(),
+                                "type", orgCtx.type());
+
+                GoReturn<String> accessJwtResult = Auth.signJWT(
+                                claims,
+                                HS256_SECRET,
+                                MINUTES_30);
+                if (accessJwtResult.error != null) {
+                        Utils.Logger.error("Error signing access JWT: {}",
+                                        accessJwtResult.error.getMessage());
+                        throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+                }
+
+                response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
+                                true,
+                                false);
+
+                response.cookie(ORG_REFRESH_COOKIE,
+                                newRefreshToken,
+                                DAYS_7 / 1000,
+                                true,
+                                false);
+                return null;
+        }
+
+        public static Object Logout(Request request, Response response) throws Exception {
+                response.removeCookie(PATIENT_REFRESH_COOKIE);
+                response.removeCookie(ORG_REFRESH_COOKIE);
+
+                return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+        }
+
+        public static Object Whoami(Request request, Response response) throws JsonProcessingException {
+                UserCtx tmpUser = request.attribute(USER_CTX);
+                UserCtx tmpOrg = request.attribute(ORG_CTX);
+
+                UUID user = tmpUser != null ? tmpUser.uuid() : null;
+                UUID org = tmpOrg != null ? tmpOrg.uuid() : null;
+
+                return Utils.MAPPER.writeValueAsString(new ServerResponse.WhoamiResponse(user, org));
+        }
 }
