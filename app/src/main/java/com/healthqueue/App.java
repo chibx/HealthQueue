@@ -8,13 +8,15 @@ import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
 import com.healthqueue.utils.ExceptionHandler;
+import com.healthqueue.utils.Utils;
+
 import spark.Spark;
 
 public class App {
     public static void main(String[] args) {
-        final String PORT = System.getenv("PORT");
+        final String PORT = Utils.getEnv("PORT", "3000");
 
-        Spark.port(PORT != null ? Integer.parseInt(PORT) : 3000);
+        Spark.port(Integer.parseInt(PORT));
 
         Spark.exception(Exception.class, ExceptionHandler::handle);
 
@@ -35,12 +37,13 @@ public class App {
                 // Separated patient and organization auth flows
                 Spark.post("/patient/register", AuthController::RegisterPatient);
                 Spark.post("/patient/login", AuthController::LoginPatient);
+                Spark.post("/patient/refresh", AuthController::RefreshPatient);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
+                Spark.post("/organization/refresh", AuthController::RefreshOrganization);
 
                 Spark.post("/logout", AuthController::Logout);
-                Spark.post("/refresh", AuthController::Refresh);
                 Spark.get("/whoami", AuthController::Whoami);
             });
 
