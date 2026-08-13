@@ -145,7 +145,8 @@ public class AuthController {
         }
 
         @Nullable
-        Users user = dsl.selectFrom(USERS)
+        Users user = dsl.select(USERS.ID, USERS.PASSWORD_HASH)
+                .from(USERS)
                 .where(USERS.EMAIL.eq(body.email()))
                 .fetchOneInto(Users.class);
 
@@ -300,7 +301,8 @@ public class AuthController {
         }
 
         @Nullable
-        Organizations org = dsl.selectFrom(ORGANIZATIONS)
+        Organizations org = dsl.select(ORGANIZATIONS.ID, ORGANIZATIONS.PASSWORD_HASH)
+                .from(ORGANIZATIONS)
                 .where(ORGANIZATIONS.EMAIL.eq(body.email()))
                 .fetchOneInto(Organizations.class);
 
