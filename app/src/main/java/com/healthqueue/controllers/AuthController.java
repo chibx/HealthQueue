@@ -131,7 +131,7 @@ public class AuthController {
                 true,
                 false);
 
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LoginPatient(Request request, Response response) throws Exception {
@@ -192,7 +192,7 @@ public class AuthController {
                 true,
                 false);
 
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object RegisterOrganization(Request request, Response response) throws Exception {
@@ -287,7 +287,7 @@ public class AuthController {
                 true,
                 false);
 
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LoginOrganization(Request request, Response response) throws Exception {
@@ -349,7 +349,7 @@ public class AuthController {
                 true,
                 false);
 
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object RefreshPatient(Request request, Response response) throws Exception {
@@ -412,7 +412,7 @@ public class AuthController {
                 true,
                 false);
 
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object RefreshOrganization(Request request, Response response) {
@@ -484,7 +484,7 @@ public class AuthController {
                 DAYS_7 / 1000,
                 true,
                 false);
-        return null;
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LogoutPatient(Request request, Response response) throws Exception {
@@ -499,7 +499,7 @@ public class AuthController {
         response.removeCookie(PATIENT_ACCESS_COOKIE);
 
         if (refreshToken == null || userCtx == null)
-            return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+            return Utils.DEFAULT_OK_RESP;
 
         try {
             dsl.deleteFrom(USER_REFRESH_TOKENS)
@@ -509,7 +509,7 @@ public class AuthController {
         } catch (Exception e) {
         }
 
-        return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LogoutOrganization(Request request, Response response) throws Exception {
@@ -524,7 +524,7 @@ public class AuthController {
         response.removeCookie(ORG_ACCESS_COOKIE);
 
         if (refreshToken == null || orgCtx == null)
-            return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+            return Utils.DEFAULT_OK_RESP;
 
         try {
             dsl.deleteFrom(ORG_REFRESH_TOKENS)
@@ -534,7 +534,7 @@ public class AuthController {
         } catch (Exception e) {
         }
 
-        return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+        return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object Whoami(Request request, Response response) throws JsonProcessingException {

@@ -41,6 +41,7 @@ import java.util.function.Function;
 public class Utils {
     public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final Logger Logger = LoggerFactory.getLogger(Constants.APP_NAME);
+    public static final String DEFAULT_OK_RESP;
     private static DSLContext dsl;
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
@@ -57,6 +58,12 @@ public class Utils {
 
     static {
         dotenv = Dotenv.configure().load();
+
+        try {
+            DEFAULT_OK_RESP = structuredResponse(STATUS_OK, RESPONSE_OK);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static {
