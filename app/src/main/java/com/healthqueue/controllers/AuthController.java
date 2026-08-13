@@ -8,7 +8,16 @@ import static com.healthqueue.db.Tables.USERS;
 import static com.healthqueue.db.Tables.USER_REFRESH_TOKENS;
 
 import com.healthqueue.db.tables.pojos.Organizations;
-import com.healthqueue.db.tables.pojos.Users;
+import com.healthqueue.models.Interfaces.HealthQueueDatabase;
+import com.healthqueue.models.Types.CreateOrgParams;
+import com.healthqueue.models.Types.CreateOrgSessionParams;
+import com.healthqueue.models.Types.CreatePatientParams;
+import com.healthqueue.models.Types.CreatePatientSessionParams;
+import com.healthqueue.models.Types.DatabaseException;
+import com.healthqueue.models.Values.CreateOrg;
+import com.healthqueue.models.Values.CreatePatient;
+import com.healthqueue.models.Values.GetOrgLogin;
+import com.healthqueue.models.Values.GetPatientLogin;
 import com.healthqueue.utils.Auth;
 import com.healthqueue.utils.AuthContext.UserCtx;
 import com.healthqueue.utils.ServerError;
@@ -24,7 +33,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.f4b6a3.uuid.UuidCreator;
 
 import jakarta.validation.ConstraintViolation;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Map;
@@ -35,7 +43,6 @@ import javax.crypto.SecretKey;
 
 import org.jooq.DSLContext;
 import org.jooq.Record1;
-import org.jooq.exception.DataAccessException;
 import org.jspecify.annotations.Nullable;
 
 import spark.Request;
@@ -46,11 +53,9 @@ public class AuthController {
 
     private static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
             Auth.HMAC256_ALGORITHM);
-    // private static final SecretKey AES_SECRET = new
-    // SecretKeySpec(Auth.AES_SECRET_BYTE, Auth.CIPHER_ALGORITHM);
 
     public static Object RegisterPatient(Request request, Response response) throws Exception {
-        final DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
         PatientSignupRequest body = Utils.fromJSON(request.body(), PatientSignupRequest.class);
@@ -69,21 +74,17 @@ public class AuthController {
         UUID newUserId = UuidCreator.getTimeOrderedEpoch();
 
         @Nullable
-        Users newUser;
+        CreatePatient newUser;
 
         try {
-            newUser = dsl.insertInto(USERS)
-                    .set(USERS.ID, newUserId)
-                    .set(USERS.FIRST_NAME, body.firstName())
-                    .set(USERS.LAST_NAME, body.lastName())
-                    .set(USERS.EMAIL, body.email())
-                    .set(USERS.PASSWORD_HASH, passwordHash)
-                    .set(USERS.LATITUDE, BigDecimal.valueOf(body.latitude()))
-                    .set(USERS.LONGITUDE, BigDecimal.valueOf(body.longitude()))
-                    .returningResult(USERS.ID, USERS.FIRST_NAME, USERS.LAST_NAME, USERS.EMAIL)
-                    .fetchOne()
-                    .into(Users.class);
-        } catch (DataAccessException dae) {
+            CreatePatientParams params = CreatePatientParams.builder()
+                    .id(newUserId)
+                    .firstName(body.firstName())
+                    .lastName(body.lastName())
+                    .email(body.email())
+                    .passwordHash(passwordHash).build();
+            newUser = db.patients().createAndReturn(params);
+        } catch (DatabaseException dae) {
             if (dae.getMessage() != null && dae.getMessage()
                     .contains("duplicate key value violates unique constraint \"users_email_key\"")) {
                 throw new ServerError(STATUS_BAD_REQUEST, "Account with this email already exists");
@@ -97,7 +98,7 @@ public class AuthController {
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", newUser.getId().toString(),
+                "uuid", newUser.id.toString(),
                 "type", PATIENT);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
@@ -111,31 +112,22 @@ public class AuthController {
 
         String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-        dsl.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
-                USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
-                .values(newUser.getId(), refreshToken, ipAddr,
-                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                ZoneId.systemDefault()))
-                .execute();
+        CreatePatientSessionParams params = CreatePatientSessionParams.builder()
+                .id(newUser.id)
+                .token(refreshToken).ipAddr(ipAddr)
+                .expiryDate(Utils.addToDate(DAYS_7))
+                .build();
 
-        response.cookie(
-                ORG_ACCESS_COOKIE,
-                accessJwtResult.value,
-                MINUTES_30 / 1000,
-                true,
-                false);
-        response.cookie(
-                PATIENT_REFRESH_COOKIE,
-                refreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
+        db.patients().createSession(params);
+
+        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LoginPatient(Request request, Response response) throws Exception {
-        final DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
         PatientLoginRequest body = Utils.fromJSON(request.body(), PatientLoginRequest.class);
@@ -145,22 +137,19 @@ public class AuthController {
         }
 
         @Nullable
-        Users user = dsl.select(USERS.ID, USERS.PASSWORD_HASH)
-                .from(USERS)
-                .where(USERS.EMAIL.eq(body.email()))
-                .fetchOneInto(Users.class);
+        GetPatientLogin user = db.patients().getPatientLogin(body.email());
 
         if (user == null) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        GoReturn<Boolean> verifyResult = Auth.verifyHash(user.getPasswordHash(), body.password());
+        GoReturn<Boolean> verifyResult = Auth.verifyHash(user.passwordHash, body.password());
         if (verifyResult.error != null || !verifyResult.value) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", user.getId().toString(),
+                "uuid", user.id.toString(),
                 "type", PATIENT);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
@@ -175,28 +164,22 @@ public class AuthController {
 
         String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-        dsl.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
-                USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
-                .values(user.getId(), refreshToken, ipAddr,
-                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                ZoneId.systemDefault()))
-                .execute();
+        CreatePatientSessionParams params = CreatePatientSessionParams.builder()
+                .id(user.id)
+                .token(refreshToken).ipAddr(ipAddr)
+                .expiryDate(Utils.addToDate(DAYS_7))
+                .build();
 
-        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
-                true,
-                false);
-        response.cookie(
-                PATIENT_REFRESH_COOKIE,
-                refreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
+        db.patients().createSession(params);
+
+        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object RegisterOrganization(Request request, Response response) throws Exception {
-        final DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
         OrganizationSignupRequest body = Utils.fromJSON(request.body(), OrganizationSignupRequest.class);
@@ -206,11 +189,8 @@ public class AuthController {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
-        Record1<String> orgRecord = dsl.select(ORGANIZATION_REQUESTS.REGISTRATION_CODE)
-                .from(ORGANIZATION_REQUESTS)
-                .where(ORGANIZATION_REQUESTS.EMAIL.eq(body.email())).fetchOne();
-        String orgCode = orgRecord.get(ORGANIZATION_REQUESTS.REGISTRATION_CODE);
-        if (orgCode == null) {
+        boolean doesCodeExist = db.organizations().hasRegistrationCode(body.email());
+        if (doesCodeExist == false) {
             throw new ServerError(STATUS_UNAUTHORIZED, "Invalid Registration Code");
         }
 
@@ -224,27 +204,19 @@ public class AuthController {
         UUID newOrgId = UuidCreator.getTimeOrderedEpoch();
 
         @Nullable
-        Organizations newOrg;
+        CreateOrg newOrg;
 
         try {
-            newOrg = dsl.insertInto(ORGANIZATIONS)
-                    .set(ORGANIZATIONS.ID, newOrgId)
-                    .set(ORGANIZATIONS.NAME, body.name())
-                    .set(ORGANIZATIONS.EMAIL, body.email())
-                    .set(ORGANIZATIONS.PASSWORD_HASH, passwordHash)
-                    .returningResult(ORGANIZATIONS.ID, ORGANIZATIONS.NAME, ORGANIZATIONS.EMAIL)
-                    .fetchOneInto(Organizations.class);
-        } catch (DataAccessException dae) {
+            CreateOrgParams params = CreateOrgParams.builder()
+                    .id(newOrgId).name(body.name())
+                    .email(body.email())
+                    .passwordHash(passwordHash).build();
+            newOrg = db.organizations().createAndReturn(params);
+        } catch (DatabaseException dae) {
             if (dae.getMessage() != null && dae.getMessage()
                     .contains("duplicate key value violates unique constraint \"organizations_email_key\"")) {
                 throw new ServerError(STATUS_BAD_REQUEST, "Account with this email already exists");
 
-            }
-            if (dae.getMessage() != null && dae.getMessage()
-                    .contains(
-                            "duplicate key value violates unique constraint \"organization_requests_registration_code_key\"")) {
-                throw new ServerError(STATUS_BAD_REQUEST,
-                        "Organization with this registration code already exists");
             }
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, dae);
         }
@@ -254,7 +226,7 @@ public class AuthController {
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", newOrg.getId().toString(),
+                "uuid", newOrg.id.toString(),
                 "type", ORG_KEY);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
@@ -269,29 +241,22 @@ public class AuthController {
 
         String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-        dsl.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
-                ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
-                .values(newOrg.getId(), refreshToken, ipAddr,
-                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                ZoneId.systemDefault()))
-                .execute();
+        CreateOrgSessionParams params = CreateOrgSessionParams.builder()
+                .id(newOrg.id)
+                .token(refreshToken)
+                .ipAddr(ipAddr)
+                .expiryDate(Utils.addToDate(DAYS_7))
+                .build();
+        db.organizations().createSession(params);
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
-                true,
-                false);
-
-        response.cookie(
-                ORG_REFRESH_COOKIE,
-                refreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
+        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LoginOrganization(Request request, Response response) throws Exception {
-        final DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
         OrganizationLoginRequest body = Utils.fromJSON(request.body(), OrganizationLoginRequest.class);
@@ -300,23 +265,19 @@ public class AuthController {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
-        @Nullable
-        Organizations org = dsl.select(ORGANIZATIONS.ID, ORGANIZATIONS.PASSWORD_HASH)
-                .from(ORGANIZATIONS)
-                .where(ORGANIZATIONS.EMAIL.eq(body.email()))
-                .fetchOneInto(Organizations.class);
+        GetOrgLogin org = db.organizations().getOrgLogin(body.email());
 
         if (org == null) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        GoReturn<Boolean> verifyResult = Auth.verifyHash(org.getPasswordHash(), body.password());
+        GoReturn<Boolean> verifyResult = Auth.verifyHash(org.passwordHash, body.password());
         if (verifyResult.error != null || !verifyResult.value) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", org.getId().toString(),
+                "uuid", org.id.toString(),
                 "type", ORG_KEY);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
@@ -331,29 +292,23 @@ public class AuthController {
 
         String refreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
-        dsl.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
-                ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
-                .values(org.getId(), refreshToken, ipAddr,
-                        OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                ZoneId.systemDefault()))
-                .execute();
+        CreateOrgSessionParams params = CreateOrgSessionParams.builder()
+                .id(org.id)
+                .token(refreshToken)
+                .ipAddr(ipAddr)
+                .expiryDate(Utils.addToDate(DAYS_7))
+                .build();
+        db.organizations().createSession(params);
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
-                true,
-                false);
-
-        response.cookie(
-                ORG_REFRESH_COOKIE,
-                refreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
+        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object RefreshPatient(Request request, Response response) throws Exception {
         DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
         @Nullable

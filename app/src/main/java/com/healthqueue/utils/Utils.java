@@ -14,6 +14,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.f4b6a3.uuid.exception.InvalidUuidException;
+import com.healthqueue.models.Interfaces.HealthQueueDatabase;
+import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
 import jakarta.validation.ConstraintViolation;
@@ -45,7 +47,8 @@ public class Utils {
     private static DSLContext dsl;
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
-    private final static Dotenv dotenv;
+    private static final Dotenv dotenv;
+    private static final HealthQueueDatabase db = new HealthQueueDB(dsl);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
     // sequence ---
@@ -97,6 +100,10 @@ public class Utils {
 
     public static DSLContext getDSL() {
         return dsl;
+    }
+
+    public static HealthQueueDatabase getDB() {
+        return db;
     }
 
     public static class GoReturn<T> {
