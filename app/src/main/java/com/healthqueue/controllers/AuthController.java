@@ -487,9 +487,52 @@ public class AuthController {
         return null;
     }
 
-    public static Object Logout(Request request, Response response) throws Exception {
+    public static Object LogoutPatient(Request request, Response response) throws Exception {
+        DSLContext dsl = Utils.getDSL();
+
+        @Nullable
+        String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
+        @Nullable
+        UserCtx userCtx = request.attribute(USER_CTX);
+
         response.removeCookie(PATIENT_REFRESH_COOKIE);
+        response.removeCookie(PATIENT_ACCESS_COOKIE);
+
+        if (refreshToken == null || userCtx == null)
+            return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+
+        try {
+            dsl.deleteFrom(USER_REFRESH_TOKENS)
+                    .where(USER_REFRESH_TOKENS.USER_ID.eq(userCtx.uuid()),
+                            USER_REFRESH_TOKENS.TOKEN.eq(refreshToken))
+                    .execute();
+        } catch (Exception e) {
+        }
+
+        return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+    }
+
+    public static Object LogoutOrganization(Request request, Response response) throws Exception {
+        DSLContext dsl = Utils.getDSL();
+
+        @Nullable
+        String refreshToken = request.cookie(ORG_REFRESH_COOKIE);
+        @Nullable
+        UserCtx orgCtx = request.attribute(ORG_CTX);
+
         response.removeCookie(ORG_REFRESH_COOKIE);
+        response.removeCookie(ORG_ACCESS_COOKIE);
+
+        if (refreshToken == null || orgCtx == null)
+            return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
+
+        try {
+            dsl.deleteFrom(ORG_REFRESH_TOKENS)
+                    .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
+                            ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
+                    .execute();
+        } catch (Exception e) {
+        }
 
         return Utils.structuredResponse(STATUS_OK, RESPONSE_OK);
     }

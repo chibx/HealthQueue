@@ -38,12 +38,13 @@ public class App {
                 Spark.post("/patient/register", AuthController::RegisterPatient);
                 Spark.post("/patient/login", AuthController::LoginPatient);
                 Spark.post("/patient/refresh", AuthController::RefreshPatient);
+                Spark.post("/patient/logout", AuthController::LogoutPatient);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
                 Spark.post("/organization/refresh", AuthController::RefreshOrganization);
+                Spark.post("/organization/logout", AuthController::LogoutOrganization);
 
-                Spark.post("/logout", AuthController::Logout);
                 Spark.get("/whoami", AuthController::Whoami);
             });
 
