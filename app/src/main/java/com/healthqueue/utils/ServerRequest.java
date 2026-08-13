@@ -1,5 +1,6 @@
 package com.healthqueue.utils;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.DecimalMax;
@@ -17,7 +18,7 @@ public class ServerRequest {
     // ==========================================
     // USER (PATIENT) REQUESTS
     // ==========================================
-
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record PatientSignupRequest(
             @NotBlank @JsonProperty("firstName") String firstName,
             @NotBlank @JsonProperty("lastName") String lastName,
@@ -28,6 +29,7 @@ public class ServerRequest {
             @NotNull @JsonProperty("longitude") @DecimalMin(value = "-180.0", message = "Longitude must be >= -180.0") @DecimalMax(value = "180.0", message = "Longitude must be <= 180.0") Double longitude) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record PatientLoginRequest(
             @Email @JsonProperty("email") String email,
             @NotBlank @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH) @JsonProperty("password") String password) {
@@ -37,6 +39,7 @@ public class ServerRequest {
     // ORGANIZATION REQUESTS
     // ==========================================
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record OrganizationSignupRequest(
             @NotBlank @JsonProperty("name") String name,
             @NotBlank @JsonProperty("registrationCode") String registrationCode,
@@ -44,6 +47,7 @@ public class ServerRequest {
             @NotBlank @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH) @JsonProperty("password") String password) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record OrganizationLoginRequest(
             @Email @JsonProperty("email") String email,
             @NotBlank @Size(min = Constants.MIN_PASSWORD_LENGTH, max = Constants.MAX_PASSWORD_LENGTH) @JsonProperty("password") String password) {
@@ -53,14 +57,16 @@ public class ServerRequest {
     // BRANCH & DOCTOR MANAGEMENT REQUESTS
     // ==========================================
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record CreateBranchRequest(
             @NotNull @JsonProperty("organizationId") UUID organizationId,
             @NotBlank @JsonProperty("name") String name,
             @NotBlank @JsonProperty("address") String address,
-            @NotNull @JsonProperty("latitude") Double latitude,
-            @NotNull @JsonProperty("longitude") Double longitude) {
+            @NotNull @JsonProperty("latitude") @DecimalMin(value = "-90.0", message = "Latitude must be >= -90.0") @DecimalMax(value = "90.0", message = "Latitude must be <= 90.0") Double latitude,
+            @NotNull @JsonProperty("longitude") @DecimalMin(value = "-180.0", message = "Longitude must be >= -180.0") @DecimalMax(value = "180.0", message = "Longitude must be <= 180.0") Double longitude) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record CreateDoctorRequest(
             @Min(1) @JsonProperty("branchId") long branchId,
             @NotBlank @JsonProperty("firstName") String firstName,
@@ -72,6 +78,7 @@ public class ServerRequest {
     // APPOINTMENT & QUEUE REQUESTS
     // ==========================================
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record CreateAppointmentRequest(
             @NotNull @JsonProperty("userId") UUID userId,
             @Min(1) @JsonProperty("branchId") long branchId,
@@ -80,6 +87,7 @@ public class ServerRequest {
             @NotNull @JsonProperty("scheduledEndTime") ZonedDateTime scheduledEndTime) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record UpdateAppointmentStatusRequest(
             @Min(1) @JsonProperty("appointmentId") long appointmentId,
             @NotBlank @JsonProperty("status") String status,
@@ -87,11 +95,13 @@ public class ServerRequest {
             @JsonProperty("actualEndTime") ZonedDateTime actualEndTime) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record ReassignDoctorRequest(
             @Min(1) @JsonProperty("appointmentId") long appointmentId,
             @Min(1) @JsonProperty("newDoctorId") long newDoctorId) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record FindClosestBranchesRequest(
             @NotNull @JsonProperty("latitude") Double latitude,
             @NotNull @JsonProperty("longitude") Double longitude,
@@ -102,6 +112,7 @@ public class ServerRequest {
     // CLINIC VISITS (HISTORY & RECORDS)
     // ==========================================
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static record RecordClinicVisitRequest(
             @Min(1) @JsonProperty("appointmentId") long appointmentId,
             @NotNull @JsonProperty("userId") UUID userId,
