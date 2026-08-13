@@ -11,8 +11,6 @@ CREATE TABLE users (
     last_name VARCHAR(100) NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    latitude DECIMAL(10, 8),  -- For distance calculations
-    longitude DECIMAL(11, 8), -- For distance calculations
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
