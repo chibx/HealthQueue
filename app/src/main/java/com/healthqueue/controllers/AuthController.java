@@ -98,7 +98,7 @@ public class AuthController {
 
         Map<String, Object> claims = Map.of(
                 "uuid", newUser.getId().toString(),
-                "type", "patient");
+                "type", PATIENT);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
@@ -161,7 +161,7 @@ public class AuthController {
 
         Map<String, Object> claims = Map.of(
                 "uuid", user.getId().toString(),
-                "type", "patient");
+                "type", PATIENT);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
@@ -255,7 +255,7 @@ public class AuthController {
 
         Map<String, Object> claims = Map.of(
                 "uuid", newOrg.getId().toString(),
-                "type", "organization");
+                "type", ORG_KEY);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
@@ -317,7 +317,7 @@ public class AuthController {
 
         Map<String, Object> claims = Map.of(
                 "uuid", org.getId().toString(),
-                "type", "organization");
+                "type", ORG_KEY);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
@@ -349,13 +349,7 @@ public class AuthController {
                 true,
                 false);
 
-        return Utils.structuredResponse(
-                STATUS_OK,
-                RESPONSE_OK,
-                new ServerResponse.AuthResponse(
-                        accessJwtResult.value,
-                        org.getId().toString(),
-                        "organization"));
+        return null;
     }
 
     public static Object RefreshPatient(Request request, Response response) throws Exception {
@@ -448,7 +442,13 @@ public class AuthController {
         dsl.transaction((ctx) -> {
             DSLContext innerDSL = ctx.dsl();
 
-            innerDSL.update(ORG_REFRESH_TOKENS).set(ORG_REFRESH_TOKENS.USED, true)
+            // innerDSL.update(ORG_REFRESH_TOKENS).set(ORG_REFRESH_TOKENS.USED, true)
+            // .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
+            // ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
+            // .execute();
+
+            // Delete token instead
+            innerDSL.deleteFrom(ORG_REFRESH_TOKENS)
                     .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
                             ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
                     .execute();
