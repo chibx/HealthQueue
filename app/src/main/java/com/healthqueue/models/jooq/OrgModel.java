@@ -3,10 +3,9 @@ package com.healthqueue.models.jooq;
 import static com.healthqueue.db.Tables.ORGANIZATIONS;
 import static com.healthqueue.db.Tables.ORGANIZATION_REQUESTS;
 import static com.healthqueue.db.Tables.ORG_REFRESH_TOKENS;
-import static com.healthqueue.db.Tables.USERS;
-
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 
 import org.jooq.DSLContext;
 
@@ -14,7 +13,6 @@ import com.healthqueue.models.Types.*;
 import com.healthqueue.models.Interfaces.Organizations;
 import com.healthqueue.models.Values.CreateOrg;
 import com.healthqueue.models.Values.GetOrgLogin;
-import com.healthqueue.utils.Utils;
 
 public class OrgModel implements Organizations {
     final DSLContext dsl;
@@ -73,5 +71,18 @@ public class OrgModel implements Organizations {
         } catch (Exception e) {
             throw new DatabaseException(e);
         }
+    }
+
+    public void deleteSession(UUID id, String token) throws DatabaseException {
+        try {
+            dsl.deleteFrom(ORG_REFRESH_TOKENS)
+                    .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(id), ORG_REFRESH_TOKENS.TOKEN.eq(token));
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public boolean exists(UUID id) throws DatabaseException {
+        return dsl.fetchExists(dsl.selectOne().from(ORGANIZATIONS).where(ORGANIZATIONS.ID.eq(id)));
     }
 }

@@ -5,6 +5,7 @@ import static com.healthqueue.db.Tables.USER_REFRESH_TOKENS;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 
 import org.jooq.DSLContext;
 
@@ -65,5 +66,19 @@ public class PatientModel implements Interfaces.Patients {
         } catch (Exception e) {
             throw new DatabaseException(e);
         }
+    }
+
+    public void deleteSession(UUID id, String token) throws DatabaseException {
+        try {
+            dsl.deleteFrom(USER_REFRESH_TOKENS)
+                    .where(USER_REFRESH_TOKENS.USER_ID.eq(id),
+                            USER_REFRESH_TOKENS.TOKEN.eq(token));
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public boolean exists(UUID id) throws DatabaseException {
+        return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(id)));
     }
 }

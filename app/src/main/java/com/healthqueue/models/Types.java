@@ -1,7 +1,6 @@
 package com.healthqueue.models;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Builder;
 
@@ -46,4 +45,5 @@ public class Types {
         public String token;
         public Instant expiryDate;
     }
+
 }

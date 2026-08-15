@@ -3,6 +3,7 @@ package com.healthqueue.models.jooq;
 import org.jooq.DSLContext;
 
 import com.healthqueue.models.Interfaces.*;
+import com.healthqueue.models.Types.DatabaseException;
 
 public class HealthQueueDB implements HealthQueueDatabase {
     private final DSLContext dsl;
@@ -27,7 +28,7 @@ public class HealthQueueDB implements HealthQueueDatabase {
         return this._organizations;
     }
 
-    public void runTx(TransactionFn fn) {
+    public void runTx(TransactionFn fn) throws DatabaseException {
         dsl.transaction((ctx) -> {
             DSLContext _dsl = ctx.dsl();
             fn.run(new HealthQueueDB(_dsl));
