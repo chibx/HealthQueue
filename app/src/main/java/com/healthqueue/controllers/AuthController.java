@@ -1,13 +1,6 @@
 package com.healthqueue.controllers;
 
 import static com.healthqueue.utils.Constants.*;
-import static com.healthqueue.db.Tables.ORGANIZATIONS;
-import static com.healthqueue.db.Tables.ORGANIZATION_REQUESTS;
-import static com.healthqueue.db.Tables.ORG_REFRESH_TOKENS;
-import static com.healthqueue.db.Tables.USERS;
-import static com.healthqueue.db.Tables.USER_REFRESH_TOKENS;
-
-import com.healthqueue.db.tables.pojos.Organizations;
 import com.healthqueue.models.Interfaces.HealthQueueDatabase;
 import com.healthqueue.models.Types.CreateOrgParams;
 import com.healthqueue.models.Types.CreateOrgSessionParams;
@@ -33,16 +26,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.f4b6a3.uuid.UuidCreator;
 
 import jakarta.validation.ConstraintViolation;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
-import org.jooq.DSLContext;
-import org.jooq.Record1;
 import org.jspecify.annotations.Nullable;
 
 import spark.Request;
@@ -307,7 +296,6 @@ public class AuthController {
     }
 
     public static Object RefreshPatient(Request request, Response response) throws Exception {
-        DSLContext dsl = Utils.getDSL();
         final HealthQueueDatabase db = Utils.getDB();
 
         String ipAddr = request.ip();
@@ -317,7 +305,7 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        boolean userExists = dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(userCtx.uuid())));
+        boolean userExists = db.patients().exists(userCtx.uuid());
         if (!userExists) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
@@ -328,20 +316,22 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
         String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
-        dsl.transaction((ctx) -> {
-            DSLContext innerDSL = ctx.dsl();
 
-            innerDSL.update(USER_REFRESH_TOKENS).set(USER_REFRESH_TOKENS.USED, true)
-                    .where(USER_REFRESH_TOKENS.USER_ID.eq(userCtx.uuid()),
-                            USER_REFRESH_TOKENS.TOKEN.eq(refreshToken))
-                    .execute();
-            innerDSL.insertInto(USER_REFRESH_TOKENS, USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
-                    USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
-                    .values(userCtx.uuid(), newRefreshToken, ipAddr,
-                            OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                    ZoneId.systemDefault()))
-                    .execute();
-        });
+        try {
+            db.runTx((tx) -> {
+                CreatePatientSessionParams params = CreatePatientSessionParams.builder()
+                        .id(userCtx.uuid())
+                        .token(newRefreshToken).ipAddr(ipAddr)
+                        .expiryDate(Utils.addToDate(DAYS_7))
+                        .build();
+
+                tx.patients().deleteSession(userCtx.uuid(), refreshToken);
+                tx.patients().createSession(params);
+            });
+        } catch (Exception e) {
+            Utils.Logger.error("Error occurred when refreshing patient session", e);
+            throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+        }
 
         Map<String, Object> claims = Map.of(
                 "uuid", userCtx.uuid(),
@@ -357,22 +347,14 @@ public class AuthController {
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
         }
 
-        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
-                true,
-                false);
-
-        response.cookie(PATIENT_REFRESH_COOKIE,
-                newRefreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
+        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(PATIENT_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
 
-    public static Object RefreshOrganization(Request request, Response response) {
-        DSLContext dsl = Utils.getDSL();
-
+    public static Object RefreshOrganization(Request request, Response response) throws Exception {
+        final HealthQueueDatabase db = Utils.getDB();
         String ipAddr = request.ip();
 
         @Nullable
@@ -381,9 +363,7 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        boolean orgExists = dsl
-                .fetchExists(dsl.selectOne().from(ORGANIZATIONS)
-                        .where(ORGANIZATIONS.ID.eq(orgCtx.uuid())));
+        boolean orgExists = db.organizations().exists(orgCtx.uuid());
         if (!orgExists) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
@@ -394,27 +374,22 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
         String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
-        dsl.transaction((ctx) -> {
-            DSLContext innerDSL = ctx.dsl();
 
-            // innerDSL.update(ORG_REFRESH_TOKENS).set(ORG_REFRESH_TOKENS.USED, true)
-            // .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
-            // ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
-            // .execute();
+        try {
+            db.runTx((tx) -> {
+                CreateOrgSessionParams params = CreateOrgSessionParams.builder()
+                        .id(orgCtx.uuid())
+                        .token(newRefreshToken).ipAddr(ipAddr)
+                        .expiryDate(Utils.addToDate(DAYS_7))
+                        .build();
 
-            // Delete token instead
-            innerDSL.deleteFrom(ORG_REFRESH_TOKENS)
-                    .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
-                            ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
-                    .execute();
-            innerDSL.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID,
-                    ORG_REFRESH_TOKENS.TOKEN,
-                    ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
-                    .values(orgCtx.uuid(), newRefreshToken, ipAddr,
-                            OffsetDateTime.ofInstant(Utils.addToDate(DAYS_7),
-                                    ZoneId.systemDefault()))
-                    .execute();
-        });
+                tx.organizations().deleteSession(orgCtx.uuid(), refreshToken);
+                tx.organizations().createSession(params);
+            });
+        } catch (Exception e) {
+            Utils.Logger.error("Error occurred when refreshing organizations session", e);
+            throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
+        }
 
         Map<String, Object> claims = Map.of(
                 "uuid", orgCtx.uuid(),
@@ -425,25 +400,18 @@ public class AuthController {
                 HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
-            Utils.Logger.error("Error signing access JWT: {}",
-                    accessJwtResult.error.getMessage());
+            Utils.Logger.error("Error signing access JWT: {}", accessJwtResult.error.getMessage());
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
         }
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000,
-                true,
-                false);
+        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(ORG_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000, true, false);
 
-        response.cookie(ORG_REFRESH_COOKIE,
-                newRefreshToken,
-                DAYS_7 / 1000,
-                true,
-                false);
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LogoutPatient(Request request, Response response) throws Exception {
-        DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         @Nullable
         String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
@@ -457,18 +425,16 @@ public class AuthController {
             return Utils.DEFAULT_OK_RESP;
 
         try {
-            dsl.deleteFrom(USER_REFRESH_TOKENS)
-                    .where(USER_REFRESH_TOKENS.USER_ID.eq(userCtx.uuid()),
-                            USER_REFRESH_TOKENS.TOKEN.eq(refreshToken))
-                    .execute();
+            db.patients().deleteSession(userCtx.uuid(), refreshToken);
         } catch (Exception e) {
+            Utils.Logger.error("Error logging user out:", e);
         }
 
         return Utils.DEFAULT_OK_RESP;
     }
 
     public static Object LogoutOrganization(Request request, Response response) throws Exception {
-        DSLContext dsl = Utils.getDSL();
+        final HealthQueueDatabase db = Utils.getDB();
 
         @Nullable
         String refreshToken = request.cookie(ORG_REFRESH_COOKIE);
@@ -478,15 +444,14 @@ public class AuthController {
         response.removeCookie(ORG_REFRESH_COOKIE);
         response.removeCookie(ORG_ACCESS_COOKIE);
 
-        if (refreshToken == null || orgCtx == null)
+        if (refreshToken == null || orgCtx == null) {
             return Utils.DEFAULT_OK_RESP;
+        }
 
         try {
-            dsl.deleteFrom(ORG_REFRESH_TOKENS)
-                    .where(ORG_REFRESH_TOKENS.ORGANIZATION_ID.eq(orgCtx.uuid()),
-                            ORG_REFRESH_TOKENS.TOKEN.eq(refreshToken))
-                    .execute();
+            db.organizations().deleteSession(orgCtx.uuid(), refreshToken);
         } catch (Exception e) {
+            Utils.Logger.error("Error logging user out:", e);
         }
 
         return Utils.DEFAULT_OK_RESP;
