@@ -7,6 +7,7 @@ import com.healthqueue.models.Types.DatabaseException;
 
 public class HealthQueueDB implements HealthQueueDatabase {
     private final DSLContext dsl;
+    private DoctorModel _doctors = null;
     private PatientModel _patients = null;
     private OrgModel _organizations = null;
 
@@ -19,6 +20,13 @@ public class HealthQueueDB implements HealthQueueDatabase {
             this._patients = new PatientModel(dsl);
         }
         return this._patients;
+    }
+
+    public DoctorModel doctors() {
+        if (this._doctors == null) {
+            this._doctors = new DoctorModel(dsl);
+        }
+        return this._doctors;
     }
 
     public OrgModel organizations() {
