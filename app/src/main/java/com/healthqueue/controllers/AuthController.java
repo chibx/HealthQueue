@@ -305,10 +305,10 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        boolean userExists = db.patients().exists(userCtx.uuid());
-        if (!userExists) {
-            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        }
+        // boolean userExists = db.patients().exists(userCtx.uuid());
+        // if (!userExists) {
+        // throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        // }
 
         @Nullable
         String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
@@ -363,10 +363,10 @@ public class AuthController {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
 
-        boolean orgExists = db.organizations().exists(orgCtx.uuid());
-        if (!orgExists) {
-            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        }
+        // boolean orgExists = db.organizations().exists(orgCtx.uuid());
+        // if (!orgExists) {
+        // throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        // }
 
         @Nullable
         String refreshToken = request.cookie(ORG_REFRESH_COOKIE);
