@@ -36,12 +36,24 @@ public class Interfaces {
         void deleteSession(UUID id, String token) throws DatabaseException;
 
         boolean exists(UUID id) throws DatabaseException;
+
+    }
+
+    public interface Doctors {
+        void create(CreateStaffParams params) throws DatabaseException;
+
+        void delete(UUID orgId, long branchId, long doctorId) throws DatabaseException;
+
+        void updateBranch(UUID orgId, long newBranchId, long oldBranchId, long doctorId) throws DatabaseException;
+
     }
 
     public interface HealthQueueDatabase {
         public Patients patients();
 
         public Organizations organizations();
+
+        public Doctors doctors();
 
         public void runTx(TransactionFn fn) throws DatabaseException;
     }

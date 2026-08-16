@@ -46,4 +46,12 @@ public class Types {
         public Instant expiryDate;
     }
 
+    @Builder
+    public static class CreateStaffParams {
+        // public UUID orgId;
+        public String firstName;
+        public String lastName;
+        public String specialty;
+        public long branchId;
+    }
 }
