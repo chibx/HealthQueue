@@ -42,11 +42,9 @@ public class PatientModel implements Interfaces.Patients {
 
     public void createSession(CreatePatientSessionParams params) throws DatabaseException {
         try {
-            dsl.insertInto(USER_REFRESH_TOKENS,
-                    USER_REFRESH_TOKENS.USER_ID,
-                    USER_REFRESH_TOKENS.TOKEN,
-                    USER_REFRESH_TOKENS.IP,
-                    USER_REFRESH_TOKENS.EXPIRES_AT)
+            dsl.insertInto(USER_REFRESH_TOKENS).columns(
+                    USER_REFRESH_TOKENS.USER_ID, USER_REFRESH_TOKENS.TOKEN,
+                    USER_REFRESH_TOKENS.IP, USER_REFRESH_TOKENS.EXPIRES_AT)
                     .values(params.id, params.token, params.ipAddr,
                             OffsetDateTime.ofInstant(params.expiryDate, ZoneId.systemDefault()))
                     .execute();
@@ -79,6 +77,7 @@ public class PatientModel implements Interfaces.Patients {
     }
 
     public boolean exists(UUID id) throws DatabaseException {
+        // dsl.query(null)
         return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(id)));
     }
 }

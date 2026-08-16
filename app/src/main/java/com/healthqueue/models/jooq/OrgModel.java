@@ -1,5 +1,6 @@
 package com.healthqueue.models.jooq;
 
+import static com.healthqueue.db.Tables.DOCTORS;
 import static com.healthqueue.db.Tables.ORGANIZATIONS;
 import static com.healthqueue.db.Tables.ORGANIZATION_REQUESTS;
 import static com.healthqueue.db.Tables.ORG_REFRESH_TOKENS;
@@ -39,8 +40,9 @@ public class OrgModel implements Organizations {
 
     public void createSession(CreateOrgSessionParams params) throws DatabaseException {
         try {
-            dsl.insertInto(ORG_REFRESH_TOKENS, ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
-                    ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
+            dsl.insertInto(ORG_REFRESH_TOKENS)
+                    .columns(ORG_REFRESH_TOKENS.ORGANIZATION_ID, ORG_REFRESH_TOKENS.TOKEN,
+                            ORG_REFRESH_TOKENS.IP, ORG_REFRESH_TOKENS.EXPIRES_AT)
                     .values(params.id, params.token, params.ipAddr,
                             OffsetDateTime.ofInstant(params.expiryDate, ZoneId.systemDefault()))
                     .execute();
