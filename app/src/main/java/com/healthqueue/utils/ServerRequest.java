@@ -74,6 +74,19 @@ public class ServerRequest {
             @NotBlank @JsonProperty("specialty") String specialty) {
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static record DeleteDoctorRequest(
+            @Min(1) @JsonProperty("branchId") long branchId,
+            @NotBlank @JsonProperty("staffId") long doctorId) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static record ChangeDoctorBranchRequest(
+            @Min(1) @JsonProperty("branchId") long branchId,
+            @Min(1) @JsonProperty("newBranchId") long newBranchId,
+            @NotBlank @JsonProperty("doctorId") long doctorId) {
+    }
+
     // ==========================================
     // APPOINTMENT & QUEUE REQUESTS
     // ==========================================
