@@ -40,7 +40,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
+import redis.clients.jedis.RedisClient;
+
 public class Utils {
+    public static final String DB_PASSWORD = Utils.getEnv("DB_PASS");
+    public static final String DB_USER = Utils.getEnv("DB_USER");
+    public static final String JDBC_URL = Utils.getEnv("JDBC_URL");
+    public static final String REDIS_URL = Utils.getEnv("REDIS_URL");
+
     public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final Logger Logger = LoggerFactory.getLogger(Constants.APP_NAME);
     public static final String DEFAULT_OK_RESP;
@@ -48,7 +55,8 @@ public class Utils {
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
     private static final Dotenv dotenv;
-    private static final HealthQueueDatabase db = new HealthQueueDB(dsl);
+    private static final HealthQueueDatabase db;
+    private static final RedisClient redis = new RedisClient(REDIS_URL);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
     // sequence ---
@@ -91,6 +99,7 @@ public class Utils {
         HikariDataSource dataSource = new HikariDataSource(config);
 
         dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
+        db = new HealthQueueDB(dsl);
     }
 
     static {

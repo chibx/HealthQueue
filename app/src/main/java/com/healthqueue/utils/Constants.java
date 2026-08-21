@@ -41,8 +41,4 @@ public class Constants {
     public static final int HOURS_1 = 60 * MINUTE_1;
     public static final int DAY_1 = 24 * HOURS_1;
     public static final int DAYS_7 = 7 * DAY_1;
-
-    public static final String DB_PASSWORD = Utils.getEnv("DB_PASS");
-    public static final String DB_USER = Utils.getEnv("DB_USER");
-    public static final String JDBC_URL = Utils.getEnv("JDBC_URL");
 }
