@@ -97,12 +97,10 @@ public class OrgModel implements Organizations {
         try {
             var userPoint = DSL.field(
                     "ST_SetSRID(ST_MakePoint({0}, {1}), 4326)::geography",
-                    Object.class, userLongitude, userLatitude);
+                    userLongitude, userLatitude);
 
             // 2. Define the PostGIS Geography point constructed from the table columns
-            var branchPoint = DSL.field(
-                    "ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography",
-                    Object.class);
+            var branchPoint = DSL.field("ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography");
 
             // 3. Define distance calculation (in meters)
             var distanceMeters = DSL.field(
@@ -131,7 +129,6 @@ public class OrgModel implements Organizations {
             });
 
             return branches;
-
         } catch (Exception e) {
             throw new DatabaseException(e);
         }

@@ -39,15 +39,16 @@ public class Values {
         }
     }
 
-    public static class GetNearestBranches {
-        public final UUID id;
+    public static class GetNearestBranches{
+        public final long id;
         public final String name;
         public final String address;
         public final double distanceInMeters;
-
-        public GetNearestBranches(UUID id, String name, String address, double distance) {
+        public GetNearestBranches(long id, String name, String address, double distance){
             this.id = id;
-            this.name = this.address = address;
+            this.name = name;
+            this.address = address;
+            this.distanceInMeters = distance;
         }
     }
 }
