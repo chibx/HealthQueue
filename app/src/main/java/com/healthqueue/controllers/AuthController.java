@@ -44,7 +44,7 @@ public class AuthController {
             Auth.HMAC256_ALGORITHM);
 
     public static Object RegisterPatient(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         String ipAddr = request.ip();
         PatientSignupRequest body = Utils.fromJSON(request.body(), PatientSignupRequest.class);
@@ -116,7 +116,7 @@ public class AuthController {
     }
 
     public static Object LoginPatient(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         String ipAddr = request.ip();
         PatientLoginRequest body = Utils.fromJSON(request.body(), PatientLoginRequest.class);
@@ -168,7 +168,7 @@ public class AuthController {
     }
 
     public static Object RegisterOrganization(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         String ipAddr = request.ip();
         OrganizationSignupRequest body = Utils.fromJSON(request.body(), OrganizationSignupRequest.class);
@@ -245,7 +245,7 @@ public class AuthController {
     }
 
     public static Object LoginOrganization(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         String ipAddr = request.ip();
         OrganizationLoginRequest body = Utils.fromJSON(request.body(), OrganizationLoginRequest.class);
@@ -296,7 +296,7 @@ public class AuthController {
     }
 
     public static Object RefreshPatient(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         String ipAddr = request.ip();
         @Nullable
@@ -354,7 +354,7 @@ public class AuthController {
     }
 
     public static Object RefreshOrganization(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
         String ipAddr = request.ip();
 
         @Nullable
@@ -411,7 +411,7 @@ public class AuthController {
     }
 
     public static Object LogoutPatient(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         @Nullable
         String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
@@ -434,7 +434,7 @@ public class AuthController {
     }
 
     public static Object LogoutOrganization(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         @Nullable
         String refreshToken = request.cookie(ORG_REFRESH_COOKIE);

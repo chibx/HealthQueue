@@ -26,7 +26,7 @@ import spark.Response;
 
 public class DoctorController {
     public static Object CreateDoctor(Request request, Response response) throws Exception {
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         CreateDoctorRequest body = Utils.fromJSON(request.body(), CreateDoctorRequest.class);
         Set<ConstraintViolation<CreateDoctorRequest>> violations = Utils.validate(body);
@@ -49,7 +49,7 @@ public class DoctorController {
         if (orgCtx == null) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
-        final HealthQueueDatabase db = Utils.getDB();
+        final HealthQueueDB db = Utils.getDB();
 
         DeleteDoctorRequest body = Utils.fromJSON(request.body(), DeleteDoctorRequest.class);
         Set<ConstraintViolation<DeleteDoctorRequest>> violations = Utils.validate(body);
