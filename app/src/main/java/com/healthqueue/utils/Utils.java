@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.f4b6a3.uuid.exception.InvalidUuidException;
+import com.healthqueue.cache.CacheManager;
 import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
@@ -114,8 +115,8 @@ public class Utils {
         return db;
     }
 
-    public static RedisClient cache() {
-        return redis;
+    public static CacheManager cache() {
+        return new CacheManager(redis);
     }
 
     public static class GoReturn<T> {
