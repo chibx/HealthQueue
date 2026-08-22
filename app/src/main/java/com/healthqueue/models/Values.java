@@ -38,4 +38,16 @@ public class Values {
             this.passwordHash = password;
         }
     }
+
+    public static class GetNearestBranches {
+        public final UUID id;
+        public final String name;
+        public final String address;
+        public final double distanceInMeters;
+
+        public GetNearestBranches(UUID id, String name, String address, double distance) {
+            this.id = id;
+            this.name = this.address = address;
+        }
+    }
 }
