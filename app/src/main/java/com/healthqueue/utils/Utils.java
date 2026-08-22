@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.f4b6a3.uuid.exception.InvalidUuidException;
-import com.healthqueue.models.Interfaces.HealthQueueDatabase;
 import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
@@ -55,8 +54,8 @@ public class Utils {
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
     private static final Dotenv dotenv;
-    private static final HealthQueueDatabase db;
-    private static final RedisClient redis = new RedisClient(REDIS_URL);
+    private static final HealthQueueDB db;
+    private static final RedisClient redis = RedisClient.create(REDIS_URL);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
     // sequence ---
@@ -111,8 +110,12 @@ public class Utils {
         return dsl;
     }
 
-    public static HealthQueueDatabase getDB() {
+    public static HealthQueueDB getDB() {
         return db;
+    }
+
+    public static RedisClient cache() {
+        return redis;
     }
 
     public static class GoReturn<T> {

@@ -5,7 +5,7 @@ import org.jooq.DSLContext;
 import com.healthqueue.models.Interfaces.*;
 import com.healthqueue.models.Types.DatabaseException;
 
-public class HealthQueueDB implements HealthQueueDatabase {
+public class HealthQueueDB/* implements HealthQueueDatabase */ {
     private final DSLContext dsl;
     private DoctorModel _doctors = null;
     private PatientModel _patients = null;
