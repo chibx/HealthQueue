@@ -1,7 +1,6 @@
 package com.healthqueue.controllers;
 
 import static com.healthqueue.utils.Constants.*;
-import com.healthqueue.models.Interfaces.HealthQueueDatabase;
 import com.healthqueue.models.Types.CreateOrgParams;
 import com.healthqueue.models.Types.CreateOrgSessionParams;
 import com.healthqueue.models.Types.CreatePatientParams;
@@ -11,6 +10,7 @@ import com.healthqueue.models.Values.CreateOrg;
 import com.healthqueue.models.Values.CreatePatient;
 import com.healthqueue.models.Values.GetOrgLogin;
 import com.healthqueue.models.Values.GetPatientLogin;
+import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.Auth;
 import com.healthqueue.utils.AuthContext.UserCtx;
 import com.healthqueue.utils.ServerError;

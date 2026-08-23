@@ -67,6 +67,13 @@ public class Utils {
 
     private final static Validator validator;
 
+    public static @FunctionalInterface interface AsyncRunner {
+        /**
+         * Runs this operation.
+         */
+        void run() throws Exception;
+    }
+
     static {
         dotenv = Dotenv.configure().load();
 
@@ -246,6 +253,16 @@ public class Utils {
                 throw (r.error instanceof RuntimeException re) ? re : new CompletionException(r.error);
             }
             return r.value;
+        });
+    }
+
+    public static void executeAsync(AsyncRunner fn) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                fn.run();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 
