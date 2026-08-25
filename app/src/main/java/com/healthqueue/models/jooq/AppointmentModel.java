@@ -1,21 +1,17 @@
 package com.healthqueue.models.jooq;
 
 import static com.healthqueue.db.Tables.APPOINTMENTS;
-import static com.healthqueue.db.Tables.DOCTORS;
-import static com.healthqueue.db.Tables.BRANCHES;
-
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-
 import org.jooq.DSLContext;
 
-import com.healthqueue.db.enums.AppointmentStatus;
 import com.healthqueue.models.Interfaces;
+import com.healthqueue.models.Values;
 import com.healthqueue.models.Types.CreateAppointmentParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Types.ReassignDoctorParams;
 import com.healthqueue.models.Types.UpdateAppointmentParams;
-import com.healthqueue.models.Interfaces.Appointment;
+import com.healthqueue.models.Values.Appointment;
 
 public class AppointmentModel implements Interfaces.Appointments {
     final DSLContext dsl;
@@ -24,7 +20,6 @@ public class AppointmentModel implements Interfaces.Appointments {
         this.dsl = dsl;
     }
 
-    @Override
     public Appointment createAndReturn(CreateAppointmentParams params) throws DatabaseException {
         try {
             return dsl.insertInto(APPOINTMENTS)
@@ -86,7 +81,6 @@ public class AppointmentModel implements Interfaces.Appointments {
         try {
             dsl.update(APPOINTMENTS)
                     .set(APPOINTMENTS.DOCTOR_ID, params.newDoctorId)
-                    .set(APPOINTMENTS.STATUS, AppointmentStatus.SCHEDULED)
                     .where(APPOINTMENTS.ID.eq(params.appointmentId))
                     .execute();
         } catch (Exception e) {
@@ -95,7 +89,7 @@ public class AppointmentModel implements Interfaces.Appointments {
     }
 
     @Override
-    public Appointment getById(long appointmentId) throws DatabaseException {
+    public Appointment getAppointmentDetails(long appointmentId) throws DatabaseException {
         try {
             return dsl.selectFrom(APPOINTMENTS)
                     .where(APPOINTMENTS.ID.eq(appointmentId))

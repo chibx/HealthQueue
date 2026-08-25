@@ -68,11 +68,13 @@ public class App {
                 // PATCH is used here for partial updates to the appointment entity
                 Spark.patch("/:id/status", AppointmentController::UpdateStatus);
                 Spark.patch("/:id/reassign", AppointmentController::ReassignDoctor);
+                Spark.get("/visits/history", VisitController::GetPatientVisitHistory);
             });
 
             // CLINIC VISIT ROUTES (History)
             Spark.path("/visits", () -> {
                 Spark.post("", VisitController::RecordVisit);
+                Spark.get("/history", VisitController::GetPatientVisitHistory);
             });
         });
 

@@ -74,6 +74,13 @@ public class Utils {
         void run() throws Exception;
     }
 
+    public static @FunctionalInterface interface ReturnRunner<T> {
+        /**
+         * Runs this operation.
+         */
+        T run() throws Exception;
+    }
+
     static {
         dotenv = Dotenv.configure().load();
 
@@ -266,9 +273,9 @@ public class Utils {
         });
     }
 
-    public static <T> GoReturn<@Nullable T> tryGo(java.util.concurrent.Callable<T> fn) {
+    public static <T> GoReturn<@Nullable T> tryGo(ReturnRunner<T> fn) {
         try {
-            return new GoReturn<>(fn.call(), null);
+            return new GoReturn<>(fn.run(), null);
         } catch (Exception e) {
             return new GoReturn<>(null, e);
         }

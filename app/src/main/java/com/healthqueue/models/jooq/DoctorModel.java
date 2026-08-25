@@ -16,7 +16,7 @@ import com.healthqueue.db.enums.AppointmentStatus;
 import com.healthqueue.models.Interfaces;
 import com.healthqueue.models.Types.CreateStaffParams;
 import com.healthqueue.models.Types.DatabaseException;
-import com.healthqueue.models.Interfaces.Doctor;
+import com.healthqueue.models.Values.Doctor;
 
 public class DoctorModel implements Interfaces.Doctors {
     final DSLContext dsl;

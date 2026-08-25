@@ -7,11 +7,11 @@ import com.healthqueue.models.Types.DatabaseException;
 
 public class HealthQueueDB {
     private final DSLContext dsl;
-    private DoctorModel _doctors = null;
-    private PatientModel _patients = null;
-    private OrgModel _organizations = null;
-    private AppointmentModel _appointments = null;
-    private ClinicVisitModel _clinicVisits = null;
+    private DoctorModel _doctors;
+    private PatientModel _patients;
+    private OrgModel _organizations;
+    private AppointmentModel _appointments;
+    private ClinicVisitModel _clinicVisits;
 
     public HealthQueueDB(DSLContext dsl) {
         this.dsl = dsl;
@@ -40,14 +40,14 @@ public class HealthQueueDB {
 
     public AppointmentModel appointments() {
         if (this._appointments == null) {
-            this._appointments = new AppointmentModel(dsl);
+            this._appointments = new AppointmentModel(this.dsl);
         }
         return this._appointments;
     }
 
     public ClinicVisitModel clinicVisits() {
         if (this._clinicVisits == null) {
-            this._clinicVisits = new ClinicVisitModel(dsl);
+            this._clinicVisits = new ClinicVisitModel(this.dsl);
         }
         return this._clinicVisits;
     }

@@ -1,10 +1,8 @@
 package com.healthqueue.models;
 
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.UUID;
 
-import com.healthqueue.db.enums.AppointmentStatus;
 import com.healthqueue.models.Types.*;
 import com.healthqueue.models.Values.*;
 import com.healthqueue.models.jooq.HealthQueueDB;
@@ -55,14 +53,23 @@ public class Interfaces {
         Doctor getDoctorDetails(long doctorId) throws DatabaseException;
     }
 
+    // public interface Appointments {
+
+    // void updateStatus(UpdateAppointmentParams params) throws DatabaseException;
+
+    // void reassignDoctor(ReassignDoctorParams params) throws DatabaseException;
+
+    // Appointment getById(long appointmentId) throws DatabaseException;
+    // }
+
     public interface Appointments {
         Appointment createAndReturn(CreateAppointmentParams params) throws DatabaseException;
 
-        void updateStatus(UpdateAppointmentParams params) throws DatabaseException;
+        void updateStatus(Types.UpdateAppointmentParams params) throws Types.DatabaseException;
 
-        void reassignDoctor(ReassignDoctorParams params) throws DatabaseException;
+        void reassignDoctor(Types.ReassignDoctorParams params) throws Types.DatabaseException;
 
-        Appointment getById(long appointmentId) throws DatabaseException;
+        Appointment getAppointmentDetails(long appointmentId) throws Types.DatabaseException;
     }
 
     public interface ClinicVisits {
@@ -81,28 +88,5 @@ public class Interfaces {
         public ClinicVisits clinicVisits();
 
         public void runTx(TransactionFn fn) throws DatabaseException;
-    }
-
-    @lombok.Builder
-    public static class Appointment {
-        public long id;
-        public UUID userId;
-        public long branchId;
-        public long doctorId;
-        public AppointmentStatus status;
-        public ZonedDateTime scheduledStartTime;
-        public ZonedDateTime scheduledEndTime;
-        public ZonedDateTime actualStartTime;
-        public ZonedDateTime actualEndTime;
-    }
-
-    @lombok.Builder
-    public static class Doctor {
-        public long id;
-        public long branchId;
-        public String firstName;
-        public String lastName;
-        public String specialty;
-        public boolean isAvailable;
     }
 }

@@ -62,7 +62,22 @@ public class DoctorController {
         return Utils.structuredResponse(STATUS_OK, "Staff removed successfully");
     }
 
-    public static Object UpdateDoctorBranch(Request req, Response res) throws Exception {
-        return Utils.structuredResponse(STATUS_OK, "Current branch updated");
+    public static Object UpdateDoctorBranch(Request request, Response response) throws Exception {
+        @Nullable
+        UserCtx orgCtx = request.attribute(ORG_CTX);
+        if (orgCtx == null) {
+            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        }
+        final HealthQueueDB db = Utils.getDB();
+
+        ChangeDoctorBranchRequest body = Utils.fromJSON(request.body(), ChangeDoctorBranchRequest.class);
+        Set<ConstraintViolation<ChangeDoctorBranchRequest>> violations = Utils.validate(body);
+        if (!violations.isEmpty()) {
+            throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+        }
+
+        db.doctors().updateBranch(orgCtx.uuid(), body.newBranchId(), body.branchId(), body.doctorId());
+
+        return Utils.structuredResponse(STATUS_OK, "Doctor's branch updated successfully");
     }
 }
