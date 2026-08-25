@@ -54,7 +54,15 @@ public class BranchController {
         Set<ConstraintViolation<FindClosestBranchesRequest>> violations = Utils.validate(body);
         if (!violations.isEmpty())
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
-        var branches = Utils.cache().getNearestBranches(body.longitude(), body.latitude());
+
+        if (body.limit() < 5) {
+            throw new ServerError(STATUS_BAD_REQUEST, "Payload limit cannot be less than 5.");
+        }
+
+        if (body.limit() > 30) {
+            throw new ServerError(STATUS_BAD_REQUEST, "Payload limit cannot be greater than 30.");
+        }
+        var branches = Utils.cache().getNearestBranches(body.longitude(), body.latitude(), body.limit());
         return Utils.structuredResponse(STATUS_OK, "Closest branches retrieved successfully",
                 branches.stream().limit(body.limit()).toList());
     }

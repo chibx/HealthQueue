@@ -19,6 +19,7 @@ import com.healthqueue.utils.Utils.GoReturn;
 import com.healthqueue.utils.ServerResponse.ClinicVisitResponse;
 
 import redis.clients.jedis.RedisClient;
+import redis.clients.jedis.params.SetParams;
 
 public class CacheManager {
     private final RedisClient client;
@@ -38,18 +39,19 @@ public class CacheManager {
 
     private <T> T getCached(String cacheKey, JavaType type, java.util.concurrent.Callable<T> fetch)
             throws CacheException {
-        return getCached(cacheKey, type, fetch, Constants.MINUTES_10);
+        return getCached(cacheKey, type, fetch, com.healthqueue.utils.Constants.MINUTES_10);
     }
 
     private <T> T getCached(String cacheKey, JavaType type, java.util.concurrent.Callable<T> fetch,
-            Integer expiry)
+            Integer expiryMs)
             throws CacheException {
         try {
             GoReturn<?> flightResult = singleFlight.doCall(cacheKey, () -> Utils.tryGo(() -> {
                 String value = client.get(cacheKey);
                 if (value == null) {
                     T fetched = fetch.call();
-                    Utils.executeAsync(() -> client.set(cacheKey, mapper.writeValueAsString(fetched)));
+                    Utils.executeAsync(() -> client.set(cacheKey, mapper.writeValueAsString(fetched),
+                            SetParams.setParams().px(expiryMs)));
                     return fetched;
                 }
                 return mapper.readValue(value, type);
@@ -70,8 +72,13 @@ public class CacheManager {
 
     public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude)
             throws CacheException {
+        return getNearestBranches(userLongitude, userLatitude, com.healthqueue.utils.Constants.DEFAULT_LIMIT);
+    }
+
+    public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude, Integer limit)
+            throws CacheException {
         return getCached(
-                Constants.GET_NEAREST_BRANCHES(userLongitude, userLatitude),
+                Constants.GET_NEAREST_BRANCHES(userLongitude, userLatitude, limit),
                 mapper.getTypeFactory().constructCollectionType(List.class, GetNearestBranches.class),
                 () -> db.organizations().getNearestBranches(userLongitude, userLatitude));
     }

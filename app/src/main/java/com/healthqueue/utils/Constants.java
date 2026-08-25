@@ -36,9 +36,12 @@ public class Constants {
 
     public static final int MINUTE_1 = 60 * 1000;
     public static final int MINUTES_5 = 5 * MINUTE_1;
+    public static final int MINUTES_10 = 10 * MINUTE_1;
     public static final int MINUTES_15 = 15 * MINUTE_1;
     public static final int MINUTES_30 = 30 * MINUTE_1;
     public static final int HOURS_1 = 60 * MINUTE_1;
     public static final int DAY_1 = 24 * HOURS_1;
     public static final int DAYS_7 = 7 * DAY_1;
+
+    public static final int DEFAULT_LIMIT = 15;
 }

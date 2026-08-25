@@ -4,13 +4,8 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 class Constants {
-    static final int MINUTES_10 = 10 * 60;
-    static final int MINUTES_15 = 15 * 60;
-    static final int MINUTES_30 = 30 * 60;
-    static final int HOUR_1 = 60 * 60;
-
-    static String GET_NEAREST_BRANCHES(double longitude, double latitude) {
-        return String.format("get-n-b:%f:%f", longitude, latitude);
+    static String GET_NEAREST_BRANCHES(double longitude, double latitude, int limit) {
+        return String.format("get-n-b:%f:%f:%d", longitude, latitude, limit);
     }
 
     static String GET_PATIENT_LOGIN(String email) {

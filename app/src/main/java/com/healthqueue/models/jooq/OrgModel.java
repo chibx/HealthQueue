@@ -13,8 +13,10 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
+import com.healthqueue.cache.CacheManager.CacheException;
 import com.healthqueue.models.Types.*;
 import com.healthqueue.models.Values.*;
+import com.healthqueue.utils.Constants;
 
 public class OrgModel {
     final DSLContext dsl;
@@ -91,6 +93,11 @@ public class OrgModel {
 
     public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude)
             throws DatabaseException {
+        return getNearestBranches(userLongitude, userLatitude, Constants.DEFAULT_LIMIT);
+    }
+
+    public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude, int limit)
+            throws DatabaseException {
         try {
             var userPoint = DSL.field(
                     "ST_SetSRID(ST_MakePoint({0}, {1}), 4326)::geography",
@@ -113,7 +120,7 @@ public class OrgModel {
                     .from(BRANCHES)
                     // Order by PostGIS <-> KNN operator
                     .orderBy(DSL.field("{0} <-> {1}", branchPoint, userPoint))
-                    .limit(20)
+                    .limit(limit)
                     .fetch();
 
             @SuppressWarnings("null")
