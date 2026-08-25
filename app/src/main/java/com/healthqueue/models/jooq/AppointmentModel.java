@@ -3,10 +3,10 @@ package com.healthqueue.models.jooq;
 import static com.healthqueue.db.Tables.APPOINTMENTS;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.UUID;
 import org.jooq.DSLContext;
 
 import com.healthqueue.models.Interfaces;
-import com.healthqueue.models.Values;
 import com.healthqueue.models.Types.CreateAppointmentParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Types.ReassignDoctorParams;
@@ -110,6 +110,38 @@ public class AppointmentModel implements Interfaces.Appointments {
                                         : null)
                                 .build();
                     });
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public Appointment getAppointmentForOrganization(long appointmentId, UUID organizationId)
+            throws DatabaseException {
+        try {
+            boolean exists = dsl.selectOne().from(APPOINTMENTS).join(com.healthqueue.db.Tables.BRANCHES)
+                    .on(APPOINTMENTS.BRANCH_ID.eq(com.healthqueue.db.Tables.BRANCHES.ID))
+                    .where(APPOINTMENTS.ID.eq(appointmentId),
+                            com.healthqueue.db.Tables.BRANCHES.ORGANIZATION_ID.eq(organizationId))
+                .fetchOne() != null;
+            return exists ? getAppointmentDetails(appointmentId) : null;
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public int reassignDoctorForOrganization(long appointmentId, long newDoctorId, UUID organizationId)
+            throws DatabaseException {
+        try {
+            return dsl.update(APPOINTMENTS)
+                    .set(APPOINTMENTS.DOCTOR_ID, newDoctorId)
+                    .where(APPOINTMENTS.ID.eq(appointmentId))
+                    .andExists(dsl.selectOne().from(com.healthqueue.db.Tables.BRANCHES)
+                            .where(com.healthqueue.db.Tables.BRANCHES.ID.eq(APPOINTMENTS.BRANCH_ID),
+                                    com.healthqueue.db.Tables.BRANCHES.ORGANIZATION_ID.eq(organizationId)))
+                    .andExists(dsl.selectOne().from(com.healthqueue.db.Tables.DOCTORS)
+                            .where(com.healthqueue.db.Tables.DOCTORS.ID.eq(newDoctorId),
+                                    com.healthqueue.db.Tables.DOCTORS.BRANCH_ID.eq(APPOINTMENTS.BRANCH_ID)))
+                    .execute();
         } catch (Exception e) {
             throw new DatabaseException(e);
         }

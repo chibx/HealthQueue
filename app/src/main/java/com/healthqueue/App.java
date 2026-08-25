@@ -58,8 +58,8 @@ public class App {
             // DOCTOR ROUTES
             Spark.path("/doctors", () -> {
                 Spark.post("", DoctorController::CreateDoctor);
-                Spark.delete("", DoctorController::CreateDoctor);
-                Spark.post("/change-branch", DoctorController::CreateDoctor);
+                Spark.delete("", DoctorController::DeleteDoctor);
+                Spark.post("/change-branch", DoctorController::UpdateDoctorBranch);
             });
 
             // APPOINTMENT & QUEUE ROUTES

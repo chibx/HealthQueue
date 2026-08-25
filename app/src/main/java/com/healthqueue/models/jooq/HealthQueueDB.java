@@ -8,6 +8,7 @@ import com.healthqueue.models.Types.DatabaseException;
 public class HealthQueueDB {
     private final DSLContext dsl;
     private DoctorModel _doctors;
+    private BranchModel _branches;
     private PatientModel _patients;
     private OrgModel _organizations;
     private AppointmentModel _appointments;
@@ -29,6 +30,13 @@ public class HealthQueueDB {
             this._doctors = new DoctorModel(dsl);
         }
         return this._doctors;
+    }
+
+    public BranchModel branches() {
+        if (this._branches == null) {
+            this._branches = new BranchModel(dsl);
+        }
+        return this._branches;
     }
 
     public OrgModel organizations() {

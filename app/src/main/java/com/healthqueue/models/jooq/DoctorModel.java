@@ -36,6 +36,25 @@ public class DoctorModel implements Interfaces.Doctors {
         }
     }
 
+    public boolean belongsToOrganization(long doctorId, UUID organizationId) throws DatabaseException {
+        try {
+            return dsl.fetchExists(dsl.selectOne().from(DOCTORS).join(BRANCHES)
+                    .on(DOCTORS.BRANCH_ID.eq(BRANCHES.ID))
+                    .where(DOCTORS.ID.eq(doctorId), BRANCHES.ORGANIZATION_ID.eq(organizationId)));
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public boolean belongsToBranch(long doctorId, long branchId) throws DatabaseException {
+        try {
+            return dsl.fetchExists(dsl.selectOne().from(DOCTORS)
+                    .where(DOCTORS.ID.eq(doctorId), DOCTORS.BRANCH_ID.eq(branchId)));
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
     public void delete(UUID orgId, long branchId, long doctorId) throws DatabaseException {
         try {
             dsl.deleteFrom(DOCTORS).where(DOCTORS.ID.eq(doctorId)).andExists(

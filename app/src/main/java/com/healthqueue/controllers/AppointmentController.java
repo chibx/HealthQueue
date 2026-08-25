@@ -6,6 +6,7 @@ import static com.healthqueue.utils.Constants.PATIENT;
 import static com.healthqueue.utils.Constants.STATUS_BAD_REQUEST;
 import static com.healthqueue.utils.Constants.STATUS_OK;
 import static com.healthqueue.utils.Constants.STATUS_UNAUTHORIZED;
+import static com.healthqueue.utils.Constants.STATUS_NOT_FOUND;
 import static com.healthqueue.utils.Constants.UNAUTHORIZED;
 import static com.healthqueue.utils.Constants.USER_CTX;
 
@@ -22,6 +23,7 @@ import com.healthqueue.utils.AuthContext.UserCtx;
 import com.healthqueue.utils.ServerError;
 import com.healthqueue.utils.ServerRequest.CreateAppointmentRequest;
 import com.healthqueue.utils.ServerRequest.UpdateAppointmentStatusRequest;
+import com.healthqueue.utils.ServerRequest.ReassignDoctorRequest;
 import com.healthqueue.utils.ServerResponse.AppointmentResponse;
 import com.healthqueue.utils.Utils;
 
@@ -98,7 +100,15 @@ public class AppointmentController {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
-        AppointmentStatus newStatus = AppointmentStatus.valueOf(body.status().toUpperCase());
+        final AppointmentStatus newStatus;
+        try {
+            newStatus = AppointmentStatus.valueOf(body.status().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ServerError(STATUS_BAD_REQUEST, "Invalid appointment status.");
+        }
+        if (db.appointments().getAppointmentForOrganization(body.appointmentId(), orgCtx.uuid()) == null) {
+            throw new ServerError(STATUS_NOT_FOUND, "Appointment not found.");
+        }
 
         UpdateAppointmentParams params = UpdateAppointmentParams.builder()
                 .appointmentId(body.appointmentId())
@@ -112,8 +122,22 @@ public class AppointmentController {
         return Utils.structuredResponse(STATUS_OK, "Appointment status updated successfully");
     }
 
-    public static Object ReassignDoctor(Request req, Response res) {
-
-        return 2;
+    public static Object ReassignDoctor(Request request, Response response) throws Exception {
+        @Nullable
+        UserCtx orgCtx = request.attribute(ORG_CTX);
+        if (orgCtx == null)
+            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        ReassignDoctorRequest body = Utils.fromJSON(request.body(), ReassignDoctorRequest.class);
+        Set<ConstraintViolation<ReassignDoctorRequest>> violations = Utils.validate(body);
+        if (!violations.isEmpty())
+            throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
+        if (!Utils.getDB().doctors().belongsToOrganization(body.newDoctorId(), orgCtx.uuid())) {
+            throw new ServerError(STATUS_NOT_FOUND, "Doctor not found.");
+        }
+        if (Utils.getDB().appointments().reassignDoctorForOrganization(body.appointmentId(), body.newDoctorId(),
+                orgCtx.uuid()) == 0) {
+            throw new ServerError(STATUS_NOT_FOUND, "Appointment not found.");
+        }
+        return Utils.structuredResponse(STATUS_OK, "Appointment doctor reassigned successfully");
     }
 }

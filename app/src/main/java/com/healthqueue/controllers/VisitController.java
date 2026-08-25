@@ -4,7 +4,6 @@ import static com.healthqueue.utils.Constants.BAD_REQUEST;
 import static com.healthqueue.utils.Constants.ORG_CTX;
 import static com.healthqueue.utils.Constants.PATIENT;
 import static com.healthqueue.utils.Constants.STATUS_BAD_REQUEST;
-import static com.healthqueue.utils.Constants.STATUS_FORBIDDEN;
 import static com.healthqueue.utils.Constants.STATUS_NOT_FOUND;
 import static com.healthqueue.utils.Constants.STATUS_OK;
 import static com.healthqueue.utils.Constants.STATUS_UNAUTHORIZED;
@@ -13,8 +12,8 @@ import static com.healthqueue.utils.Constants.USER_CTX;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import com.healthqueue.models.Types.RecordClinicVisitParams;
@@ -46,23 +45,13 @@ public class VisitController {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
-        // Ensure the appointment exists and belongs to a branch of the organization
-        // This requires fetching appointment details and checking its branch_id against
-        // branches owned by orgCtx.uuid()
-        // For simplicity, let's assume the body.appointmentId() is valid and accessible
-        // by the org.
-        // A more robust solution would involve a join query in AppointmentModel or a
-        // dedicated check.
-        Appointment appointment = db.appointments().getAppointmentDetails(body.appointmentId());
+        Appointment appointment = db.appointments().getAppointmentForOrganization(body.appointmentId(), orgCtx.uuid());
         if (appointment == null) {
             throw new ServerError(STATUS_NOT_FOUND, "Appointment not found.");
         }
-
-        // Also, verify that the doctor involved in the visit belongs to a branch of
-        // this organization.
-        // This would involve fetching doctor details and verifying its branchId against
-        // organization's branches.
-        // For now, we proceed assuming doctorId is valid for the organization.
+        if (!appointment.userId.equals(body.userId()) || appointment.doctorId != body.doctorId()) {
+            throw new ServerError(STATUS_BAD_REQUEST, "Visit details do not match the appointment.");
+        }
 
         long visitId = Utils.nextSnowflakeId();
         RecordClinicVisitParams params = RecordClinicVisitParams.builder()
@@ -88,7 +77,7 @@ public class VisitController {
         final HealthQueueDB db = Utils.getDB();
 
         // The user ID is taken from the authenticated context
-        List<@Nullable ClinicVisitResponse> visitHistory = db.clinicVisits().getPatientVisitHistory(userCtx.uuid());
+        List<@NonNull ClinicVisitResponse> visitHistory = db.clinicVisits().getPatientVisitHistory(userCtx.uuid());
 
         return Utils.structuredResponse(STATUS_OK, "Patient visit history retrieved successfully", visitHistory);
     }

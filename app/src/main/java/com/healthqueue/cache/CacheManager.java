@@ -1,12 +1,22 @@
 package com.healthqueue.cache;
 
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
+import org.jspecify.annotations.NonNull;
+
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthqueue.models.Values.Appointment;
+import com.healthqueue.models.Values.Doctor;
+import com.healthqueue.models.Values.GetOrgLogin;
+import com.healthqueue.models.Values.GetPatientLogin;
 import com.healthqueue.models.Values.GetNearestBranches;
 import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.Utils;
 import com.healthqueue.utils.Utils.GoReturn;
+import com.healthqueue.utils.ServerResponse.ClinicVisitResponse;
 
 import redis.clients.jedis.RedisClient;
 
@@ -26,34 +36,76 @@ public class CacheManager {
         this.client = client;
     }
 
-    public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude)
-            throws Exception {
-        final String cacheKey = Constants.GET_NEAREST_BRANCHES(userLongitude, userLatitude);
-        GoReturn<?> flightResult = singleFlight.doCall(cacheKey, () -> {
-            return Utils.tryGo(() -> {
-                List<GetNearestBranches> result = null;
+    private <T> T getCached(String cacheKey, JavaType type, java.util.concurrent.Callable<T> fetch)
+            throws CacheException {
+        return getCached(cacheKey, type, fetch, Constants.MINUTES_10);
+    }
+
+    private <T> T getCached(String cacheKey, JavaType type, java.util.concurrent.Callable<T> fetch,
+            Integer expiry)
+            throws CacheException {
+        try {
+            GoReturn<?> flightResult = singleFlight.doCall(cacheKey, () -> Utils.tryGo(() -> {
                 String value = client.get(cacheKey);
                 if (value == null) {
-                    List<GetNearestBranches> fetched = db.organizations().getNearestBranches(userLongitude,
-                            userLatitude);
-                    result = fetched;
-                    Utils.executeAsync(() -> {
-                        client.set(cacheKey, mapper.writeValueAsString(fetched));
-                    });
-                } else {
-                    result = mapper.readValue(
-                            value,
-                            mapper.getTypeFactory().constructCollectionType(List.class, GetNearestBranches.class));
+                    T fetched = fetch.call();
+                    Utils.executeAsync(() -> client.set(cacheKey, mapper.writeValueAsString(fetched)));
+                    return fetched;
                 }
+                return mapper.readValue(value, type);
+            }));
 
-                return result;
-            });
-        });
+            if (flightResult.error != null) {
+                throw new CacheException(flightResult.error);
+            }
 
-        if (flightResult.error != null) {
-            throw new CacheException(flightResult.error);
+            T result = (T) flightResult.value;
+            return result;
+        } catch (CacheException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new CacheException(e);
         }
+    }
 
-        return (List<GetNearestBranches>) flightResult.value;
+    public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude)
+            throws CacheException {
+        return getCached(
+                Constants.GET_NEAREST_BRANCHES(userLongitude, userLatitude),
+                mapper.getTypeFactory().constructCollectionType(List.class, GetNearestBranches.class),
+                () -> db.organizations().getNearestBranches(userLongitude, userLatitude));
+    }
+
+    public boolean patientExists(UUID id) throws CacheException {
+        return getCached(Constants.PATIENT_EXISTS(id), mapper.constructType(Boolean.class),
+                () -> db.patients().exists(id));
+    }
+
+    public boolean organizationExists(UUID id) throws CacheException {
+        return getCached(Constants.ORG_EXISTS(id), mapper.constructType(Boolean.class),
+                () -> db.organizations().exists(id));
+    }
+
+    public boolean checkDoctorAvailability(long doctorId, ZonedDateTime startTime, ZonedDateTime endTime)
+            throws CacheException {
+        return getCached(Constants.CHECK_DOCTOR_AVAILABILITY(doctorId, startTime, endTime),
+                mapper.constructType(Boolean.class),
+                () -> db.doctors().checkDoctorAvailability(doctorId, startTime, endTime));
+    }
+
+    public Doctor getDoctorDetails(long doctorId) throws CacheException {
+        return getCached(Constants.GET_DOCTOR_DETAILS(doctorId), mapper.constructType(Doctor.class),
+                () -> db.doctors().getDoctorDetails(doctorId));
+    }
+
+    public Appointment getAppointmentDetails(long appointmentId) throws CacheException {
+        return getCached(Constants.GET_APPOINTMENT_DETAILS(appointmentId), mapper.constructType(Appointment.class),
+                () -> db.appointments().getAppointmentDetails(appointmentId));
+    }
+
+    public List<@NonNull ClinicVisitResponse> getPatientVisitHistory(UUID userId) throws CacheException {
+        return getCached(Constants.GET_PATIENT_VISIT_HISTORY(userId),
+                mapper.getTypeFactory().constructCollectionType(List.class, ClinicVisitResponse.class),
+                () -> db.clinicVisits().getPatientVisitHistory(userId));
     }
 }
