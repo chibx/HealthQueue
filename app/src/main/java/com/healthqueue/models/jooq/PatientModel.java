@@ -9,14 +9,13 @@ import java.util.UUID;
 
 import org.jooq.DSLContext;
 
-import com.healthqueue.models.Interfaces;
 import com.healthqueue.models.Types.CreatePatientParams;
 import com.healthqueue.models.Types.CreatePatientSessionParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Values.CreatePatient;
 import com.healthqueue.models.Values.GetPatientLogin;
 
-public class PatientModel implements Interfaces.Patients {
+public class PatientModel {
     final DSLContext dsl;
 
     public PatientModel(DSLContext dsl) {

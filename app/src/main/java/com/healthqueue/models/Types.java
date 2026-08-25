@@ -1,8 +1,10 @@
 package com.healthqueue.models;
 
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.Builder;
+import com.healthqueue.db.enums.AppointmentStatus;
 
 public class Types {
     public static class DatabaseException extends Exception {
@@ -48,10 +50,45 @@ public class Types {
 
     @Builder
     public static class CreateStaffParams {
-        // public UUID orgId;
+        public long id;
         public String firstName;
         public String lastName;
         public String specialty;
         public long branchId;
+    }
+
+    @Builder
+    public static class CreateAppointmentParams {
+        public long id;
+        public UUID userId;
+        public long branchId;
+        public long doctorId;
+        public ZonedDateTime scheduledStartTime;
+        public ZonedDateTime scheduledEndTime;
+        public AppointmentStatus status;
+    }
+
+    @Builder
+    public static class UpdateAppointmentParams {
+        public long appointmentId;
+        public AppointmentStatus status;
+        public ZonedDateTime actualStartTime;
+        public ZonedDateTime actualEndTime;
+    }
+
+    @Builder
+    public static class ReassignDoctorParams {
+        public long appointmentId;
+        public long newDoctorId;
+    }
+
+    @Builder
+    public static class RecordClinicVisitParams {
+        public long id;
+        public long appointmentId;
+        public UUID userId;
+        public long doctorId;
+        public String visitNotes;
+        public String prescriptionDetails;
     }
 }

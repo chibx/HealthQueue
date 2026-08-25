@@ -11,8 +11,8 @@ import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
 
-import com.healthqueue.models.Interfaces.HealthQueueDatabase;
 import com.healthqueue.models.Types.CreateStaffParams;
+import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.Utils;
 
 import jakarta.validation.ConstraintViolation;

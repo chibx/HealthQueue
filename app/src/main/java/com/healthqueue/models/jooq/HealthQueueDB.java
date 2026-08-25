@@ -2,14 +2,16 @@ package com.healthqueue.models.jooq;
 
 import org.jooq.DSLContext;
 
-import com.healthqueue.models.Interfaces.*;
+import com.healthqueue.models.Interfaces.TransactionFn;
 import com.healthqueue.models.Types.DatabaseException;
 
-public class HealthQueueDB/* implements HealthQueueDatabase */ {
+public class HealthQueueDB {
     private final DSLContext dsl;
     private DoctorModel _doctors = null;
     private PatientModel _patients = null;
     private OrgModel _organizations = null;
+    private AppointmentModel _appointments = null;
+    private ClinicVisitModel _clinicVisits = null;
 
     public HealthQueueDB(DSLContext dsl) {
         this.dsl = dsl;
@@ -34,6 +36,20 @@ public class HealthQueueDB/* implements HealthQueueDatabase */ {
             this._organizations = new OrgModel(dsl);
         }
         return this._organizations;
+    }
+
+    public AppointmentModel appointments() {
+        if (this._appointments == null) {
+            this._appointments = new AppointmentModel(dsl);
+        }
+        return this._appointments;
+    }
+
+    public ClinicVisitModel clinicVisits() {
+        if (this._clinicVisits == null) {
+            this._clinicVisits = new ClinicVisitModel(dsl);
+        }
+        return this._clinicVisits;
     }
 
     public void runTx(TransactionFn fn) throws DatabaseException {

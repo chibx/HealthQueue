@@ -10,16 +10,13 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.eclipse.jetty.client.api.Result;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
 import com.healthqueue.models.Types.*;
-import com.healthqueue.models.Interfaces.Organizations;
 import com.healthqueue.models.Values.*;
 
-public class OrgModel implements Organizations {
+public class OrgModel {
     final DSLContext dsl;
 
     public OrgModel(DSLContext dsl) {
