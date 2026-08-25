@@ -102,9 +102,8 @@ CREATE TABLE clinic_visits (
 CREATE INDEX idx_user_refresh_token ON user_refresh_tokens(user_id);
 CREATE INDEX idx_org_refresh_token ON org_refresh_tokens(organization_id);
 CREATE INDEX idx_organization_requests ON organization_requests(email);
-CREATE INDEX idx_users_location ON users(latitude, longitude);
 -- CREATE INDEX idx_branches_location ON branches(latitude, longitude);
-CREATE INDEX idx_branches_spatial ON branches USING GIST (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography);
+CREATE INDEX idx_branches_spatial ON branches USING GIST ( (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography) );
 CREATE INDEX idx_appointments_user ON appointments(user_id);
 CREATE INDEX idx_appointments_doctor_time ON appointments(doctor_id, scheduled_start_time);
 CREATE INDEX idx_appointments_status ON appointments(status);
