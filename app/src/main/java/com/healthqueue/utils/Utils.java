@@ -43,6 +43,8 @@ import java.util.function.Function;
 import redis.clients.jedis.RedisClient;
 
 public class Utils {
+    private static final Dotenv dotenv = Dotenv.configure().load();
+
     public static final String DB_PASSWORD = Utils.getEnv("DB_PASS");
     public static final String DB_USER = Utils.getEnv("DB_USER");
     public static final String JDBC_URL = Utils.getEnv("JDBC_URL");
@@ -54,7 +56,6 @@ public class Utils {
     private static DSLContext dsl;
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
-    private static final Dotenv dotenv;
     private static final HealthQueueDB db;
     private static final RedisClient redis = RedisClient.create(REDIS_URL);
 
@@ -82,8 +83,6 @@ public class Utils {
     }
 
     static {
-        dotenv = Dotenv.configure().load();
-
         try {
             DEFAULT_OK_RESP = structuredResponse(STATUS_OK, RESPONSE_OK);
         } catch (Exception e) {

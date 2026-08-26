@@ -1,7 +1,6 @@
 package com.healthqueue.models.jooq;
 
 import static com.healthqueue.db.Tables.BRANCHES;
-import static com.healthqueue.db.Tables.DOCTORS;
 import static com.healthqueue.db.Tables.ORGANIZATIONS;
 import static com.healthqueue.db.Tables.ORGANIZATION_REQUESTS;
 import static com.healthqueue.db.Tables.ORG_REFRESH_TOKENS;
@@ -13,7 +12,6 @@ import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
-import com.healthqueue.cache.CacheManager.CacheException;
 import com.healthqueue.models.Types.*;
 import com.healthqueue.models.Values.*;
 import com.healthqueue.utils.Constants;

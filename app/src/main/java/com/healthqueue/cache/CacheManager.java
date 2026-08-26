@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthqueue.models.Values.Appointment;
 import com.healthqueue.models.Values.Doctor;
-import com.healthqueue.models.Values.GetOrgLogin;
-import com.healthqueue.models.Values.GetPatientLogin;
 import com.healthqueue.models.Values.GetNearestBranches;
 import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.Utils;

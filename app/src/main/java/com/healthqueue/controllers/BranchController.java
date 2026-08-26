@@ -63,7 +63,6 @@ public class BranchController {
             throw new ServerError(STATUS_BAD_REQUEST, "Payload limit cannot be greater than 30.");
         }
         var branches = Utils.cache().getNearestBranches(body.longitude(), body.latitude(), body.limit());
-        return Utils.structuredResponse(STATUS_OK, "Closest branches retrieved successfully",
-                branches.stream().limit(body.limit()).toList());
+        return Utils.structuredResponse(STATUS_OK, "Closest branches retrieved successfully", branches);
     }
 }

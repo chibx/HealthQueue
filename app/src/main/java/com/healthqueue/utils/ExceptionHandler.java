@@ -24,6 +24,10 @@ public class ExceptionHandler {
                                 ((ServerError) exception).getStatusCode(),
                                 exception.getMessage()));
             }
+            Spark.halt(Constants.STATUS_INTERNAL_ERROR,
+                    Utils.structuredResponse(
+                            Constants.STATUS_INTERNAL_ERROR,
+                            Constants.INTERNAL_ERROR));
         } catch (Exception e) {
             Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
         }
