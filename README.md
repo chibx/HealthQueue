@@ -29,25 +29,25 @@ HealthQueue is built as a modern full-stack application structured into three de
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 ### For Patients
-- 📍 **GPS Proximity Search**: Auto-detects coordinates and ranks partner clinics by real-time distance using PostGIS spatial indexing.
-- 🎟️ **3-Step Booking Wizard**: Select clinic branch, choose available doctor specialist, and reserve a queue ticket in seconds.
-- ⏱️ **Live Queue Position Tracker**: Real-time ticker showing current queue position, estimated wait time, and arrival alerts.
-- 📋 **Medical History & Prescriptions**: Access past consultation logs, doctor notes, and prescription details.
-- 👤 **Personalized Profile**: Patient name and initials avatar integration.
+- **GPS Proximity Search**: Auto-detects coordinates and ranks partner clinics by real-time distance using PostGIS spatial indexing.
+- **3-Step Booking Wizard**: Select clinic branch, choose available doctor specialist, and reserve a queue ticket in seconds.
+- **Live Queue Position Tracker**: Real-time ticker showing current queue position, estimated wait time, and arrival alerts.
+- **Medical History & Prescriptions**: Access past consultation logs, doctor notes, and prescription details.
+- **Personalized Profile**: Patient name and initials avatar integration.
 
 ### For Healthcare Organizations & Clinics
-- 📊 **Executive Overview Dashboard**: Live metrics for active patient tickets, on-duty doctors, and department wait times.
-- 📋 **Live Queue Console**: Filter tickets by status (`IN_QUEUE`, `IN_PROGRESS`, `SCHEDULED`, `COMPLETED`), call next patients, and reassign specialists.
-- 🏢 **Multi-Branch Management**: Register and configure physical clinic branches with GPS coordinates.
-- 👨‍⚕️ **Doctor Directory**: Manage doctor availability, specialties, and branch assignments.
-- 🔒 **Role-Based Authentication**: Secure JWT-based HttpOnly cookie authentication and session rotation.
+- **Executive Overview Dashboard**: Live metrics for active patient tickets, on-duty doctors, and department wait times.
+- **Live Queue Console**: Filter tickets by status (`IN_QUEUE`, `IN_PROGRESS`, `SCHEDULED`, `COMPLETED`), call next patients, and reassign specialists.
+- **Multi-Branch Management**: Register and configure physical clinic branches with GPS coordinates.
+- **Doctor Directory**: Manage doctor availability, specialties, and branch assignments.
+- **Role-Based Authentication**: Secure JWT-based HttpOnly cookie authentication and session rotation.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
@@ -60,7 +60,7 @@ HealthQueue is built as a modern full-stack application structured into three de
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -193,6 +193,6 @@ HealthQueue/
 
 ---
 
-## 🛡️ License
+## License
 
 This project is open source and available under the [MIT License](LICENSE).
