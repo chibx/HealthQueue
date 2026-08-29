@@ -10,6 +10,7 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
     id 'nu.studer.jooq' version '10.2.1'
+    id 'io.freefair.lombok' version "9.5.0"
 }
 
 repositories {
@@ -43,6 +44,9 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:7.1.0'
     runtimeOnly 'org.postgresql:postgresql:42.7.4'
     jooqGenerator 'org.postgresql:postgresql:42.7.4'
+    implementation 'redis.clients:jedis:8.0.0'
+    
+    implementation 'io.freefair.lombok:io.freefair.lombok.gradle.plugin:9.5.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

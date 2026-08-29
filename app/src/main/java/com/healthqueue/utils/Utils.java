@@ -14,6 +14,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.f4b6a3.uuid.UuidCreator;
 import com.github.f4b6a3.uuid.exception.InvalidUuidException;
+import com.healthqueue.cache.CacheManager;
+import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.ServerResponse.StructuredResponse;
 
 import jakarta.validation.ConstraintViolation;
@@ -38,13 +40,24 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
+import redis.clients.jedis.RedisClient;
+
 public class Utils {
+    private static final Dotenv dotenv = Dotenv.configure().load();
+
+    public static final String DB_PASSWORD = Utils.getEnv("DB_PASS");
+    public static final String DB_USER = Utils.getEnv("DB_USER");
+    public static final String JDBC_URL = Utils.getEnv("JDBC_URL");
+    public static final String REDIS_URL = Utils.getEnv("REDIS_URL");
+
     public static final ObjectMapper MAPPER = new ObjectMapper();
     public static final Logger Logger = LoggerFactory.getLogger(Constants.APP_NAME);
+    public static final String DEFAULT_OK_RESP;
     private static DSLContext dsl;
     private static final String ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     private static SecureRandom SECURE_RANDOM;
-    private final static Dotenv dotenv;
+    private static final HealthQueueDB db;
+    private static final RedisClient redis = RedisClient.create(REDIS_URL);
 
     // --- snowflake id: 41-bit timestamp (Discord epoch) + 10-bit node id + 12-bit
     // sequence ---
@@ -55,8 +68,26 @@ public class Utils {
 
     private final static Validator validator;
 
+    public static @FunctionalInterface interface AsyncRunner {
+        /**
+         * Runs this operation.
+         */
+        void run() throws Exception;
+    }
+
+    public static @FunctionalInterface interface ReturnRunner<T> {
+        /**
+         * Runs this operation.
+         */
+        T run() throws Exception;
+    }
+
     static {
-        dotenv = Dotenv.configure().load();
+        try {
+            DEFAULT_OK_RESP = structuredResponse(STATUS_OK, RESPONSE_OK);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     static {
@@ -81,6 +112,7 @@ public class Utils {
         HikariDataSource dataSource = new HikariDataSource(config);
 
         dsl = DSL.using(dataSource, SQLDialect.POSTGRES);
+        db = new HealthQueueDB(dsl);
     }
 
     static {
@@ -90,6 +122,14 @@ public class Utils {
 
     public static DSLContext getDSL() {
         return dsl;
+    }
+
+    public static HealthQueueDB getDB() {
+        return db;
+    }
+
+    public static CacheManager cache() {
+        return new CacheManager(redis);
     }
 
     public static class GoReturn<T> {
@@ -222,9 +262,19 @@ public class Utils {
         });
     }
 
-    public static <T> GoReturn<@Nullable T> tryGo(java.util.concurrent.Callable<T> fn) {
+    public static void executeAsync(AsyncRunner fn) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                fn.run();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public static <T> GoReturn<@Nullable T> tryGo(ReturnRunner<T> fn) {
         try {
-            return new GoReturn<>(fn.call(), null);
+            return new GoReturn<>(fn.run(), null);
         } catch (Exception e) {
             return new GoReturn<>(null, e);
         }

@@ -38,12 +38,13 @@ public class App {
                 Spark.post("/patient/register", AuthController::RegisterPatient);
                 Spark.post("/patient/login", AuthController::LoginPatient);
                 Spark.post("/patient/refresh", AuthController::RefreshPatient);
+                Spark.post("/patient/logout", AuthController::LogoutPatient);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
                 Spark.post("/organization/refresh", AuthController::RefreshOrganization);
+                Spark.post("/organization/logout", AuthController::LogoutOrganization);
 
-                Spark.post("/logout", AuthController::Logout);
                 Spark.get("/whoami", AuthController::Whoami);
             });
 
@@ -57,6 +58,8 @@ public class App {
             // DOCTOR ROUTES
             Spark.path("/doctors", () -> {
                 Spark.post("", DoctorController::CreateDoctor);
+                Spark.delete("", DoctorController::DeleteDoctor);
+                Spark.post("/change-branch", DoctorController::UpdateDoctorBranch);
             });
 
             // APPOINTMENT & QUEUE ROUTES
@@ -65,11 +68,13 @@ public class App {
                 // PATCH is used here for partial updates to the appointment entity
                 Spark.patch("/:id/status", AppointmentController::UpdateStatus);
                 Spark.patch("/:id/reassign", AppointmentController::ReassignDoctor);
+                Spark.get("/visits/history", VisitController::GetPatientVisitHistory);
             });
 
             // CLINIC VISIT ROUTES (History)
             Spark.path("/visits", () -> {
                 Spark.post("", VisitController::RecordVisit);
+                Spark.get("/history", VisitController::GetPatientVisitHistory);
             });
         });
 

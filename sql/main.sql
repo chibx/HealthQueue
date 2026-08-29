@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 -- ENUMS for state management
 CREATE TYPE appointment_status AS ENUM (
     'SCHEDULED', 'IN_QUEUE', 'IN_PROGRESS', 'COMPLETED', 'OVERSTAYED', 'CANCELLED'
@@ -11,8 +13,6 @@ CREATE TABLE users (
     last_name VARCHAR(100) NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    latitude DECIMAL(10, 8),  -- For distance calculations
-    longitude DECIMAL(11, 8), -- For distance calculations
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -102,8 +102,8 @@ CREATE TABLE clinic_visits (
 CREATE INDEX idx_user_refresh_token ON user_refresh_tokens(user_id);
 CREATE INDEX idx_org_refresh_token ON org_refresh_tokens(organization_id);
 CREATE INDEX idx_organization_requests ON organization_requests(email);
-CREATE INDEX idx_users_location ON users(latitude, longitude);
-CREATE INDEX idx_branches_location ON branches(latitude, longitude);
+-- CREATE INDEX idx_branches_location ON branches(latitude, longitude);
+CREATE INDEX idx_branches_spatial ON branches USING GIST ( (ST_SetSRID(ST_MakePoint(longitude, latitude), 4326)::geography) );
 CREATE INDEX idx_appointments_user ON appointments(user_id);
 CREATE INDEX idx_appointments_doctor_time ON appointments(doctor_id, scheduled_start_time);
 CREATE INDEX idx_appointments_status ON appointments(status);
