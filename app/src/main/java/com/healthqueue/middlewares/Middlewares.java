@@ -57,8 +57,9 @@ public class Middlewares {
     public static void enableCORS(final String origin, final String methods, final String headers) {
         Spark.before((request, response) -> {
             response.header("Access-Control-Allow-Origin", origin);
-            response.header("Access-Control-Request-Method", methods);
+            response.header("Access-Control-Allow-Methods", methods);
             response.header("Access-Control-Allow-Headers", headers);
+            response.header("Access-Control-Allow-Credentials", "true");
         });
 
         Spark.options("/*", (request, response) -> {

@@ -109,7 +109,7 @@ public class AuthController {
 
         db.patients().createSession(params);
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
+        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
         response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
 
         return Utils.DEFAULT_OK_RESP;

@@ -18,6 +18,10 @@ public class App {
 
         Spark.port(Integer.parseInt(PORT));
 
+        // Enable CORS so the React frontend (port 5173 in dev) can reach this API
+        Middlewares.enableCORS("http://localhost:5173", "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+                "Content-Type,Authorization,Accept");
+
         Spark.exception(Exception.class, ExceptionHandler::handle);
 
         Spark.get("/healthz", (req, res) -> {
