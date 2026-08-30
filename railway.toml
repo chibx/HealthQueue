@@ -1,0 +1,14 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+# Pass Railway's Postgres env vars into the Docker build stage
+# so jOOQ can generate sources from the live DB schema
+buildArgs = { JDBC_URL = "${{Postgres.JDBC_URL}}", DB_USER = "${{Postgres.PGUSER}}", DB_PASSWORD = "${{Postgres.PGPASSWORD}}" }
+
+[deploy]
+startCommand = "java -jar app.jar"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
