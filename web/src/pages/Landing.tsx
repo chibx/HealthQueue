@@ -364,7 +364,7 @@ export default function Landing() {
                       'w-full rounded-full',
                       highlight
                         ? 'bg-[#00685b] hover:bg-[#005247] text-white'
-                        : 'bg-white border border-slate-200 text-slate-800 hover:bg-slate-50',
+                        : 'bg-[#00685b] border border-slate-200 text-slate-800',
                     ].join(' ')}
                   >
                     {cta}
