@@ -43,7 +43,7 @@ import java.util.function.Function;
 import redis.clients.jedis.RedisClient;
 
 public class Utils {
-    private static final Dotenv dotenv = Dotenv.configure().load();
+    private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
     public static final String DB_PASSWORD = Utils.getEnv("DB_PASS");
     public static final String DB_USER = Utils.getEnv("DB_USER");
