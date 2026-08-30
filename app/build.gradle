@@ -51,10 +51,10 @@ dependencies {
 
 // Apply a specific Java toolchain to ease working on different environments.
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-        vendor = JvmVendorSpec.ADOPTIUM
-    }
+    // toolchain {
+    //     languageVersion = JavaLanguageVersion.of(26)
+    //     vendor = JvmVendorSpec.ADOPTIUM
+    // }
 }
 
 application {
@@ -78,6 +78,10 @@ def dbUser = secrets.getProperty('dbUser', System.getenv('DB_USER') ?: 'postgres
 def jdbcUrl = secrets.getProperty('jdbcUrl', System.getenv('JDBC_URL') ?: '')
 
 def jooqGeneratedDir = 'src/generated/java'
+
+tasks.named('run') {
+    workingDir = rootProject.projectDir
+}
 
 sourceSets {
     main {

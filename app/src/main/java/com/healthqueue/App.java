@@ -4,6 +4,9 @@ import com.healthqueue.controllers.AuthController;
 // Assuming you will create these controller classes:
 import com.healthqueue.controllers.BranchController;
 import com.healthqueue.controllers.DoctorController;
+
+import java.nio.file.Paths;
+
 import com.healthqueue.controllers.AppointmentController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
@@ -17,6 +20,8 @@ public class App {
         final String PORT = Utils.getEnv("PORT", "3000");
 
         Spark.port(Integer.parseInt(PORT));
+
+        Spark.staticFiles.externalLocation(Paths.get("").toAbsolutePath().resolve("./web/dist").normalize().toString());
 
         // Enable CORS so the React frontend (port 5173 in dev) can reach this API
         Middlewares.enableCORS("http://localhost:5173", "GET,POST,PUT,PATCH,DELETE,OPTIONS",
