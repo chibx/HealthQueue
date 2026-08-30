@@ -29,9 +29,9 @@ public class Middlewares {
                     Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
                 }
             }
-            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value);
-            if (userCtx != null) {
-                req.attribute(Constants.ORG_CTX, userCtx);
+            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
+            if (orgCtx != null) {
+                req.attribute(Constants.ORG_CTX, orgCtx);
             }
         }
 
@@ -46,9 +46,9 @@ public class Middlewares {
                     Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
                 }
             }
-            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
-            if (orgCtx != null) {
-                req.attribute(Constants.USER_CTX, orgCtx);
+            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value);
+            if (userCtx != null) {
+                req.attribute(Constants.USER_CTX, userCtx);
             }
 
         }

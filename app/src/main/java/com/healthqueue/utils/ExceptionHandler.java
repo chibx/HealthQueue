@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DatabindException;
 
 import spark.Request;
 import spark.Response;
-import spark.Spark;
 
 public class ExceptionHandler {
     public static void handle(Exception exception, Request req, Response res) {
@@ -15,21 +14,26 @@ public class ExceptionHandler {
                         Constants.STATUS_BAD_REQUEST,
                         Constants.BAD_REQUEST);
 
-                Spark.halt(Constants.STATUS_BAD_REQUEST, errorBody);
+                res.status(Constants.STATUS_BAD_REQUEST);
+                res.body(errorBody);
+
+                return;
             }
             if (exception instanceof ServerError) {
-                Spark.halt(
+                res.status(((ServerError) exception).getStatusCode());
+                res.body(Utils.structuredResponse(
                         ((ServerError) exception).getStatusCode(),
-                        Utils.structuredResponse(
-                                ((ServerError) exception).getStatusCode(),
-                                exception.getMessage()));
+                        exception.getMessage()));
+
+                return;
             }
-            Spark.halt(Constants.STATUS_INTERNAL_ERROR,
-                    Utils.structuredResponse(
-                            Constants.STATUS_INTERNAL_ERROR,
-                            Constants.INTERNAL_ERROR));
+
+            Utils.Logger.error("ExceptionHandler caught:", exception.getStackTrace().toString());
+            res.status(Constants.STATUS_INTERNAL_ERROR);
+            res.body(Utils.DEFAULT_500_RESP);
         } catch (Exception e) {
-            Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
+            res.status(Constants.STATUS_INTERNAL_ERROR);
+            res.body(Utils.DEFAULT_500_RESP);
         }
     }
 }

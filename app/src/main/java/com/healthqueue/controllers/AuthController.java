@@ -120,16 +120,24 @@ public class AuthController {
 
         String ipAddr = request.ip();
         PatientLoginRequest body = Utils.fromJSON(request.body(), PatientLoginRequest.class);
+
         Set<ConstraintViolation<PatientLoginRequest>> violations = Utils.validate(body);
         if (!violations.isEmpty()) {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
         @Nullable
-        GetPatientLogin user = db.patients().getPatientLogin(body.email());
+        GetPatientLogin user;
+
+        try {
+            user = db.patients().getPatientLogin(body.email());
+        } catch (Exception e) {
+            Utils.Logger.error("Error getting patient login details: {}", e.getMessage());
+            throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, e);
+        }
 
         if (user == null) {
-            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+            throw new ServerError(STATUS_NOT_FOUND, NOT_FOUND);
         }
 
         GoReturn<Boolean> verifyResult = Auth.verifyHash(user.passwordHash, body.password());
@@ -159,7 +167,13 @@ public class AuthController {
                 .expiryDate(Utils.addToDate(DAYS_7))
                 .build();
 
-        db.patients().createSession(params);
+        try {
+            db.patients().createSession(params);
+        } catch (Exception e) {
+            Utils.Logger.error("Error creating patient: {}",
+                    accessJwtResult.error.getMessage());
+            throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, e);
+        }
 
         response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
         response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
