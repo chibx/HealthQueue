@@ -1,5 +1,16 @@
-# ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM gradle:8.8-jdk21-alpine AS builder
+# ── Stage 1: Frontend build ───────────────────────────────────────────────
+FROM node:20-alpine AS web-builder
+
+WORKDIR /app/web
+
+COPY web/package*.json ./
+RUN npm install
+
+COPY web/ ./
+RUN npm run build
+
+# ── Stage 2: Java build ────────────────────────────────────────────────────
+FROM gradle:8.8-jdk21-alpine AS java-builder
 
 WORKDIR /app
 
@@ -11,23 +22,28 @@ ENV JDBC_URL=${JDBC_URL}
 ENV DB_USER=${DB_USER}
 ENV DB_PASSWORD=${DB_PASSWORD}
 
-# ISSUES 1 & 2: Copy the gradle directory so libs.versions.toml is available
+# Copy Gradle project files
 COPY gradle/ gradle/
 COPY gradle.properties .
 COPY settings.gradle .
 COPY app/build.gradle app/build.gradle
 
+# Copy Java source
 COPY app/src/ app/src/
 
-# ISSUE 3: Explicitly run 'classes' before 'jar' to guarantee jOOQ codegen triggers
+# Include the built frontend assets in the same folder layout expected by App.java
+COPY --from=web-builder /app/web/dist ./web/dist
+
+# Build the jar; jOOQ generation is triggered as part of the Java build
 RUN gradle :app:classes :app:jar -x test -x check --no-daemon
 
-# ── Stage 2: Runtime ─────────────────────────────────────────────────────────
+# ── Stage 3: Runtime ───────────────────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/app/build/libs/*.jar app.jar
+COPY --from=java-builder /app/app/build/libs/*.jar app.jar
+COPY --from=java-builder /app/web/dist ./web/dist
 
 EXPOSE 3000
 
