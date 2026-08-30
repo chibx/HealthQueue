@@ -73,7 +73,7 @@ if (secretsFile.exists()) {
     secrets.load(new FileInputStream(secretsFile))
 }
 
-def dbPassword = secrets.getProperty('dbPassword', System.getenv('DB_PASSWORD') ?: '')
+def dbPassword = secrets.getProperty('dbPassword', System.getenv('DB_PASS') ?: '')
 def dbUser = secrets.getProperty('dbUser', System.getenv('DB_USER') ?: 'postgres')
 def jdbcUrl = secrets.getProperty('jdbcUrl', System.getenv('JDBC_URL') ?: '')
 

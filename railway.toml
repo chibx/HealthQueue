@@ -8,7 +8,7 @@ buildArgs = { JDBC_URL = "${{Postgres.JDBC_URL}}", DB_USER = "${{Postgres.PGUSER
 
 [deploy]
 startCommand = "java -jar app.jar"
-healthcheckPath = "/health"
+healthcheckPath = "/healthz"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
