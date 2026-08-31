@@ -17,10 +17,10 @@ WORKDIR /app
 # Pass Railway Postgres credentials as build args for jOOQ
 ARG JDBC_URL
 ARG DB_USER
-ARG DB_PASSWORD
+ARG DB_PASS
 ENV JDBC_URL=${JDBC_URL}
 ENV DB_USER=${DB_USER}
-ENV DB_PASSWORD=${DB_PASSWORD}
+ENV DB_PASS=${DB_PASS}
 
 # Copy Gradle project files
 COPY gradle/ gradle/
