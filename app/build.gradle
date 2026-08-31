@@ -83,6 +83,21 @@ tasks.named('run') {
     workingDir = rootProject.projectDir
 }
 
+tasks.named('jar') {
+    manifest {
+        // Replace this with the exact package path to your Main class
+        attributes 'Main-Class': 'com.healthqueue.App' 
+    }
+    
+    // Bundles all your dependencies into this single app.jar
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    // Prevents build failures if two libraries share a file name
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 sourceSets {
     main {
         java {
