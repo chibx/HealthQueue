@@ -95,7 +95,7 @@ public class Utils {
     static {
         try {
             SECURE_RANDOM = SecureRandom.getInstanceStrong();
-        } catch (NoSuchAlgorithmException _) {
+        } catch (NoSuchAlgorithmException e) {
             Logger.warn("Couldn't claim strong secure random instance");
             SECURE_RANDOM = new SecureRandom();
         }
