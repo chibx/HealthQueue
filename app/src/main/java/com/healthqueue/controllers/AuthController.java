@@ -37,6 +37,20 @@ import spark.Response;
 
 public class AuthController {
 
+    private static void setAuthCookie(Response response, String name, String value, int maxAgeSeconds) {
+        response.header("Set-Cookie",
+                name + "=" + value
+                        + "; Max-Age=" + maxAgeSeconds
+                        + "; Path=/"
+                        + "; HttpOnly"
+                        + "; SameSite=Lax");
+    }
+
+    private static void clearAuthCookie(Response response, String name) {
+        response.header("Set-Cookie",
+                name + "=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax");
+    }
+
     public static Object RegisterPatient(Request request, Response response) throws Exception {
         final HealthQueueDB db = Utils.getDB();
 
@@ -103,8 +117,8 @@ public class AuthController {
 
         db.patients().createSession(params);
 
-        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
+        setAuthCookie(response, PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000);
+        setAuthCookie(response, PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -169,8 +183,8 @@ public class AuthController {
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR, e);
         }
 
-        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
+        setAuthCookie(response, PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000);
+        setAuthCookie(response, PATIENT_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -246,8 +260,8 @@ public class AuthController {
                 .build();
         db.organizations().createSession(params);
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
+        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, false, false);
+        response.cookie(ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, false, false);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -297,8 +311,8 @@ public class AuthController {
                 .build();
         db.organizations().createSession(params);
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000, true, false);
+        setAuthCookie(response, ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000);
+        setAuthCookie(response, ORG_REFRESH_COOKIE, refreshToken, DAYS_7 / 1000);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -355,8 +369,8 @@ public class AuthController {
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
         }
 
-        response.cookie(PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(PATIENT_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000, true, false);
+        setAuthCookie(response, PATIENT_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000);
+        setAuthCookie(response, PATIENT_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -412,8 +426,8 @@ public class AuthController {
             throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
         }
 
-        response.cookie(ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000, true, false);
-        response.cookie(ORG_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000, true, false);
+        setAuthCookie(response, ORG_ACCESS_COOKIE, accessJwtResult.value, MINUTES_30 / 1000);
+        setAuthCookie(response, ORG_REFRESH_COOKIE, newRefreshToken, DAYS_7 / 1000);
 
         return Utils.DEFAULT_OK_RESP;
     }
@@ -426,15 +440,14 @@ public class AuthController {
         @Nullable
         UserCtx userCtx = request.attribute(USER_CTX);
 
-        response.removeCookie(PATIENT_REFRESH_COOKIE);
-        response.removeCookie(PATIENT_ACCESS_COOKIE);
+        clearAuthCookie(response, PATIENT_REFRESH_COOKIE);
+        clearAuthCookie(response, PATIENT_ACCESS_COOKIE);
 
         if (refreshToken == null || userCtx == null)
             return Utils.DEFAULT_OK_RESP;
 
         try {
             db.patients().deleteSession(userCtx.uuid(), refreshToken);
-            Utils.Logger.info("\nWell well well\n");
         } catch (Exception e) {
             Utils.Logger.error("Error logging user out:", e);
         }
@@ -450,8 +463,8 @@ public class AuthController {
         @Nullable
         UserCtx orgCtx = request.attribute(ORG_CTX);
 
-        response.removeCookie(ORG_REFRESH_COOKIE);
-        response.removeCookie(ORG_ACCESS_COOKIE);
+        clearAuthCookie(response, ORG_REFRESH_COOKIE);
+        clearAuthCookie(response, ORG_ACCESS_COOKIE);
 
         if (refreshToken == null || orgCtx == null) {
             return Utils.DEFAULT_OK_RESP;
@@ -473,6 +486,7 @@ public class AuthController {
         UUID user = tmpUser != null ? tmpUser.uuid() : null;
         UUID org = tmpOrg != null ? tmpOrg.uuid() : null;
 
+        System.out.print("\n" + user + '\n' + org + '\n');
         return Utils.MAPPER.writeValueAsString(new ServerResponse.WhoamiResponse(user, org));
     }
 }
