@@ -55,9 +55,9 @@ export default function FindBranch() {
           <Badge variant="green">CLINIC DISCOVERY</Badge>
           <span className="text-xs text-slate-400">· {rawList.length} verified branches</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Find Nearby Clinics</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Find Medical Centre Facilities</h1>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">
-          Detect your GPS position to view closest HealthQueue partner branches sorted by distance.
+          Detect your GPS position to view closest UNILAG Medical Centre locations sorted by distance.
         </p>
       </div>
 

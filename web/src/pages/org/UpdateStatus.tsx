@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { StatusBadge } from '../../components/ui/Badge';
 import { Clock, UserCheck } from 'lucide-react';
 import { useUpdateAppointmentStatus, useReassignDoctor } from '../../hooks/useAppointments';
+import { useToast } from '../../components/ui/Toast';
 import type { AppointmentResponse, AppointmentStatus } from '../../types';
 
 const statusOptions: AppointmentStatus[] = [
@@ -32,6 +33,7 @@ interface Props {
 }
 
 export function UpdateStatus({ appointment, onClose }: Props) {
+  const { success, error: toastError } = useToast();
   const updateStatus = useUpdateAppointmentStatus(appointment.id);
   const reassign = useReassignDoctor(appointment.id);
 
@@ -45,15 +47,21 @@ export function UpdateStatus({ appointment, onClose }: Props) {
   const onStatusSubmit = async (data: StatusForm) => {
     try {
       await updateStatus.mutateAsync({ ...data, appointmentId: appointment.id });
-    } catch { /* ignore fallback */ }
-    onClose();
+      success('Status updated', `Ticket #${appointment.id} is now ${data.status.replace('_', ' ')}.`);
+      onClose();
+    } catch (err) {
+      toastError('Update failed', err instanceof Error ? err.message : 'Could not update status.');
+    }
   };
 
   const onReassignSubmit = async (data: ReassignForm) => {
     try {
       await reassign.mutateAsync({ appointmentId: appointment.id, newDoctorId: data.newDoctorId });
-    } catch { /* ignore fallback */ }
-    onClose();
+      success('Doctor reassigned', `Appointment #${appointment.id} reassigned to doctor #${data.newDoctorId}.`);
+      onClose();
+    } catch (err) {
+      toastError('Reassignment failed', err instanceof Error ? err.message : 'Could not reassign doctor.');
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { authApi } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
 import { useGeolocation } from '../../hooks/useGeolocation';
+import { getErrorMessage, getFieldErrors } from '../../utils/errors';
 
 const schema = z.object({
   firstName: z.string().min(1, 'First name required'),
@@ -29,12 +30,13 @@ export default function PatientRegister() {
   const {
     register,
     handleSubmit,
+    setError,
     setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { latitude: 37.7749, longitude: -122.4194 }
+    defaultValues: { latitude: 0, longitude: 0 }
   });
 
   const lat = watch('latitude');
@@ -53,12 +55,18 @@ export default function PatientRegister() {
     const fullName = `${data.firstName} ${data.lastName}`.trim();
     try {
       await authApi.registerPatient(data);
-      setPatient('usr-patient-1', fullName, data.email);
+      setPatient('', fullName, data.email);
       await initialize();
       navigate('/patient');
-    } catch {
-      setPatient('usr-patient-1', fullName, data.email);
-      navigate('/patient');
+    } catch (err) {
+      const fieldErrors = getFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        Object.entries(fieldErrors).forEach(([field, message]) =>
+          setError(field as keyof FormData, { message })
+        );
+      } else {
+        setError('root', { message: getErrorMessage(err) });
+      }
     }
   };
 

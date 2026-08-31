@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authApi } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
+import { getErrorMessage, getFieldErrors } from '../../utils/errors';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -22,24 +23,28 @@ export default function PatientLogin() {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: FormData) => {
-    // Derive friendly display name from email (e.g. jane.doe@email.com -> Jane Doe)
-    const emailPrefix = data.email.split('@')[0];
-    const derivedName = emailPrefix
-      .replace(/[._-]/g, ' ')
-      .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Jane Doe';
-
     try {
-      await authApi.loginPatient(data);
-      setPatient('usr-patient-1', derivedName, data.email);
+      const res = (await authApi.loginPatient(data)) as unknown as { name?: string } | undefined;
+      const derivedName = data.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+      const name = res?.name ?? derivedName;
+      setPatient('', name, data.email);
       await initialize();
       navigate('/patient');
-    } catch {
-      setPatient('usr-patient-1', derivedName, data.email);
-      navigate('/patient');
+    } catch (err) {
+      // Surface per-field errors from the server (e.g. wrong password)
+      const fieldErrors = getFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        Object.entries(fieldErrors).forEach(([field, message]) =>
+          setError(field as keyof FormData, { message })
+        );
+      } else {
+        setError('root', { message: getErrorMessage(err) });
+      }
     }
   };
 
@@ -48,7 +53,7 @@ export default function PatientLogin() {
       {/* Top Back Link */}
       <div className="w-full max-w-4xl mb-6">
         <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors">
-          <ArrowLeft size={14} /> Back to HealthQueue Home
+          <ArrowLeft size={14} /> Back to Home
         </Link>
       </div>
 
@@ -65,10 +70,10 @@ export default function PatientLogin() {
             </div>
 
             <h2 className="text-2xl font-extrabold text-white tracking-tight leading-tight mb-3">
-              Welcome back to your healthcare hub.
+              Welcome back to UNILAG Medical Centre.
             </h2>
             <p className="text-teal-100/80 text-xs leading-relaxed mb-6">
-              Sign in to check your active queue status, schedule visits, and access your past clinic records.
+              Sign in to check your queue position, book appointments, and view your clinic visit history.
             </p>
 
             <div className="space-y-4 pt-4 border-t border-teal-800/80">
@@ -98,8 +103,8 @@ export default function PatientLogin() {
         {/* Right Side Form Panel */}
         <div className="md:col-span-7 p-8 sm:p-10 flex flex-col justify-center bg-white">
           <div className="mb-6">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Patient Sign In</h1>
-            <p className="text-slate-500 text-xs mt-1">Enter your credentials to manage your appointments.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Student / Patient Sign In</h1>
+            <p className="text-slate-500 text-xs mt-1">Enter your UNILAG Medical Centre account credentials.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">

@@ -40,9 +40,9 @@ const MOCK_ACTIVE_BOOKING = {
   queuePosition: 2,
   waitMinutes: 12,
   ticketNo: '#1042',
-  room: 'Room 3',
-  clinicName: 'City General Hospital',
-  specialty: 'Cardiology',
+  room: 'Consultation Room 3',
+  clinicName: 'UNILAG Medical Centre — Main Campus',
+  specialty: 'General Practice',
   hasActiveBooking: true,
 };
 

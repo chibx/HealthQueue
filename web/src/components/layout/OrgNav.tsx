@@ -82,7 +82,7 @@ export function OrgNav() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               SYSTEM ONLINE
             </div>
-            <span className="text-teal-100 font-medium text-[11px]">City General · Main Campus</span>
+            <span className="text-teal-100 font-medium text-[11px]">UNILAG Medical Centre</span>
           </div>
 
           <button

@@ -7,6 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authApi } from '../../api/auth';
 import { useAuthStore } from '../../store/authStore';
+import { getErrorMessage, getFieldErrors } from '../../utils/errors';
 
 const schema = z.object({
   name: z.string().min(1, 'Organization name is required'),
@@ -19,11 +20,11 @@ type FormData = z.infer<typeof schema>;
 export default function OrgRegister() {
   const navigate = useNavigate();
   const initialize = useAuthStore((s) => s.initialize);
-  const setOrg = useAuthStore((s) => s.setOrg);
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
@@ -32,10 +33,15 @@ export default function OrgRegister() {
       await authApi.registerOrganization(data);
       await initialize();
       navigate('/org');
-    } catch {
-      // Fallback when backend proxy is offline
-      setOrg('org-city-general');
-      navigate('/org');
+    } catch (err) {
+      const fieldErrors = getFieldErrors(err);
+      if (Object.keys(fieldErrors).length > 0) {
+        Object.entries(fieldErrors).forEach(([field, message]) =>
+          setError(field as keyof FormData, { message })
+        );
+      } else {
+        setError('root', { message: getErrorMessage(err) });
+      }
     }
   };
 

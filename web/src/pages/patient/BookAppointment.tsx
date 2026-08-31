@@ -95,11 +95,9 @@ export default function BookAppointment() {
       }
       success('Booking confirmed!', `Ticket #${ticketNo} — head to ${selectedBranch?.name ?? 'the clinic'}.`);
       setDone(true);
-    } catch {
-      // Graceful fallback
-      success('Booking confirmed!', `Ticket #${ticketNo} — see you there.`);
-      setDone(true);
-      toastError;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Could not book appointment. Please try again.';
+      toastError('Booking failed', msg);
     }
   };
 

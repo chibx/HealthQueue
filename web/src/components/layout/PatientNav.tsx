@@ -36,7 +36,7 @@ export function PatientNav() {
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-slate-900 tracking-tight text-base leading-tight">HealthQueue</span>
-            <span className="text-[10px] font-semibold text-[#00685b] tracking-wider uppercase">Patient Portal</span>
+            <span className="text-[10px] font-semibold text-[#00685b] tracking-wider uppercase">Student &amp; Staff Portal</span>
           </div>
         </div>
 

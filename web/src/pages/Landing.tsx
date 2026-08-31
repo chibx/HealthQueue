@@ -17,8 +17,8 @@ import { Button } from '../components/ui/Button';
 
 const NAV_LINKS = [
   { href: '#features', label: 'Features' },
-  { href: '#workflow', label: 'Workflow' },
-  { href: '#pricing',  label: 'Pricing' },
+  { href: '#workflow', label: 'How It Works' },
+  { href: '#about',    label: 'About' },
 ];
 
 const FEATURE_PILLS = [
@@ -28,25 +28,11 @@ const FEATURE_PILLS = [
   { icon: ShieldCheck,  label: 'Privacy-first records' },
 ];
 
-const PRICING = [
-  {
-    title: 'Patient',
-    price: 'Free',
-    sub: 'forever',
-    perks: ['Find nearby clinics', 'Reserve queue tickets', 'Live position tracking', 'Visit history & prescriptions'],
-    cta: 'Create patient account',
-    href: '/auth/patient/register',
-    highlight: false,
-  },
-  {
-    title: 'Clinic',
-    price: '₦9,999',
-    sub: 'per month',
-    perks: ['Unlimited branches', 'Doctor registry', 'Live queue console', 'Priority support'],
-    cta: 'Register your clinic',
-    href: '/auth/org/register',
-    highlight: true,
-  },
+const ABOUT_BULLETS = [
+  'Built for University of Lagos students, staff & dependants',
+  'Supports SDG 3: Good Health & Well-being',
+  'Reduces crowding at the UNILAG Medical Centre',
+  'Open-source & maintained by the university',
 ];
 
 export default function Landing() {
@@ -96,12 +82,12 @@ export default function Landing() {
           <div className="hidden md:flex items-center gap-3">
             <Link to="/auth/patient/login">
               <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200">
-                Patient login
+                Student login
               </Button>
             </Link>
             <Link to="/auth/org/login">
               <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200">
-                Clinic login
+                Staff login
               </Button>
             </Link>
             <Link to="/auth/patient/register">
@@ -136,10 +122,10 @@ export default function Landing() {
             ))}
             <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
               <Link to="/auth/patient/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full rounded-full">Patient login</Button>
+                <Button variant="outline" size="sm" className="w-full rounded-full">Student login</Button>
               </Link>
               <Link to="/auth/org/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full rounded-full">Clinic login</Button>
+                <Button variant="outline" size="sm" className="w-full rounded-full">Staff login</Button>
               </Link>
               <Link to="/auth/patient/register" onClick={() => setMobileOpen(false)}>
                 <Button variant="primary" size="sm" className="w-full rounded-full bg-[#00685b] text-white">
@@ -157,7 +143,7 @@ export default function Landing() {
         <div className="lg:col-span-7 flex flex-col items-start text-left animate-fade-in-up">
           <div className="mb-6 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e6f4f1] text-[#00685b] text-[11px] font-extrabold tracking-wider uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00685b] animate-pulse" />
-            Care, without the waiting room
+            University of Lagos Medical Centre
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.1] mb-6">
@@ -166,18 +152,18 @@ export default function Landing() {
           </h1>
 
           <p className="text-slate-500 text-base sm:text-lg leading-relaxed mb-8 max-w-lg font-normal">
-            Reserve a clinic ticket remotely, follow your live position, and arrive exactly when care is ready for you.
+            Book appointments at the UNILAG Medical Centre, track your live queue position, and arrive exactly when care is ready — without the wait.
           </p>
 
           <div className="flex flex-wrap gap-3 items-center">
             <Link to="/auth/patient/register">
               <Button size="lg" className="bg-[#00685b] hover:bg-[#005247] text-white rounded-full px-7 shadow-lg shadow-teal-900/15">
-                Book as patient
+                Book an appointment
               </Button>
             </Link>
-            <Link to="/auth/org/register">
+            <Link to="/auth/org/login">
               <Button size="lg" variant="outline" className="bg-white text-slate-700 border-slate-200 hover:bg-slate-50 rounded-full px-7">
-                Register clinic
+                Medical Centre Staff
                 <ChevronRight size={16} className="ml-1" />
               </Button>
             </Link>
@@ -185,11 +171,11 @@ export default function Landing() {
 
           {/* Social proof row */}
           <div className="mt-10 flex items-center gap-6 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5"><span className="font-bold text-slate-700">4.9/5</span> rating</span>
+            <span className="flex items-center gap-1.5"><span className="font-bold text-slate-700">UNILAG</span> Medical Centre</span>
             <span className="w-px h-4 bg-slate-200" />
-            <span className="flex items-center gap-1.5"><span className="font-bold text-slate-700">85%</span> wait time saved</span>
+            <span className="flex items-center gap-1.5"><span className="font-bold text-slate-700">~85%</span> wait time saved</span>
             <span className="w-px h-4 bg-slate-200" />
-            <span className="flex items-center gap-1.5"><span className="font-bold text-slate-700">120+</span> partner clinics</span>
+            <span className="flex items-center gap-1.5">Supports <span className="font-bold text-slate-700">SDG 3</span></span>
           </div>
         </div>
 
@@ -225,7 +211,7 @@ export default function Landing() {
 
             {/* Clinic info */}
             <div className="text-xs font-semibold text-slate-600 mb-4 px-1">
-              City General Hospital · Cardiology
+              UNILAG Medical Centre · General Practice
             </div>
 
             {/* Progress bar */}
@@ -263,9 +249,9 @@ export default function Landing() {
 
         <div className="grid md:grid-cols-3 gap-8 text-left relative">
           {[
-            { num: 1, icon: MapPin,  title: 'Locate a clinic',      desc: 'Use GPS to see open branches sorted by live distance from you.' },
-            { num: 2, icon: Ticket,  title: 'Reserve your ticket',  desc: 'Choose a specialist and get a confirmed digital queue number.' },
-            { num: 3, icon: Bell,    title: 'Arrive on time',       desc: 'Track your live position and get a notification when you\'re next.' },
+            { num: 1, icon: MapPin,  title: 'Find the Medical Centre',  desc: 'Use GPS to locate the UNILAG Medical Centre and available doctors near you.' },
+            { num: 2, icon: Ticket,  title: 'Book your appointment',   desc: 'Select a doctor and time slot to get a confirmed digital queue number.' },
+            { num: 3, icon: Bell,    title: 'Arrive on time',          desc: 'Track your live queue position and get a notification when you\'re next in line.' },
           ].map(({ num, icon: Icon, title, desc }) => (
             <div key={num} className="bg-white border border-slate-200/90 rounded-2xl p-8 shadow-sm hover:shadow-md hover:border-[#b2e2d8] transition-all duration-200 group relative">
               {/* Step number + connector */}
@@ -301,95 +287,55 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ── Pricing ─────────────────────────────────────────────── */}
-      <section id="pricing" className="bg-white border-y border-slate-100 py-24">
+      {/* ── About ─────────────────────────────────────────────────── */}
+      <section id="about" className="bg-white border-y border-slate-100 py-24">
         <div className="container mx-auto px-6 max-w-4xl">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-[11px] font-bold tracking-wider uppercase mb-5">
-              Pricing
+              About this project
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Simple, transparent pricing
+              Built for UNILAG students &amp; staff
             </h2>
-            <p className="text-slate-500 text-sm mt-3 max-w-md mx-auto">
-              Patients always access HealthQueue free of charge. Clinics pay a flat monthly fee with no per-booking commissions.
+            <p className="text-slate-500 text-sm mt-3 max-w-xl mx-auto">
+              This system was designed to reduce overcrowding and long wait times at the University of Lagos Medical Centre by digitising the appointment and queue management process — supporting SDG&nbsp;3 (Good Health &amp; Well-being).
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {PRICING.map(({ title, price, sub, perks, cta, href, highlight }) => (
-              <div
-                key={title}
-                className={[
-                  'rounded-3xl p-8 flex flex-col gap-6 relative overflow-hidden',
-                  highlight
-                    ? 'bg-[#0b3b36] text-white shadow-2xl'
-                    : 'bg-white border border-slate-200 shadow-sm',
-                ].join(' ')}
-              >
-                {highlight && (
-                  <div className="absolute top-4 right-4 text-[10px] font-extrabold bg-[#00685b] text-white px-2.5 py-1 rounded-full tracking-wider uppercase">
-                    Most popular
-                  </div>
-                )}
-                <div>
-                  <span className={`text-xs font-bold uppercase tracking-widest ${highlight ? 'text-teal-300' : 'text-[#00685b]'}`}>
-                    {title}
-                  </span>
-                  <div className="flex items-end gap-1.5 mt-2">
-                    <span className={`text-4xl font-extrabold tracking-tight ${highlight ? 'text-white' : 'text-slate-900'}`}>
-                      {price}
-                    </span>
-                    <span className={`text-sm pb-1 ${highlight ? 'text-teal-300' : 'text-slate-400'}`}>
-                      / {sub}
-                    </span>
-                  </div>
+          <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {ABOUT_BULLETS.map((bullet) => (
+              <div key={bullet} className="flex items-start gap-3 bg-[#f7f9f8] border border-slate-200 rounded-2xl p-5">
+                <div className="w-6 h-6 rounded-full bg-[#00685b] flex items-center justify-center shrink-0 mt-0.5">
+                  <Check size={13} className="text-white" />
                 </div>
-
-                <ul className="flex flex-col gap-3">
-                  {perks.map((p) => (
-                    <li key={p} className="flex items-center gap-2.5 text-xs">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${highlight ? 'bg-[#00685b]' : 'bg-[#e6f4f1]'}`}>
-                        <Check size={10} className={highlight ? 'text-white' : 'text-[#00685b]'} />
-                      </div>
-                      <span className={highlight ? 'text-teal-100' : 'text-slate-600'}>{p}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link to={href} className="mt-auto">
-                  <Button
-                    size="md"
-                    className={[
-                      'w-full rounded-full',
-                      highlight
-                        ? 'bg-[#00685b] hover:bg-[#005247] text-white'
-                        : 'bg-[#00685b] border border-slate-200 text-slate-800',
-                    ].join(' ')}
-                  >
-                    {cta}
-                  </Button>
-                </Link>
+                <span className="text-sm text-slate-700 font-medium leading-snug">{bullet}</span>
               </div>
             ))}
+          </div>
+
+          <div className="mt-10 text-center">
+            <Link to="/auth/patient/register">
+              <Button size="lg" className="bg-[#00685b] hover:bg-[#005247] text-white rounded-full px-8 shadow-lg shadow-teal-900/15">
+                Get started — it's free
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────────────── */}
-      <footer className="border-t border-slate-200 bg-white py-8 mt-auto text-xs text-slate-500">
-        <div className="container mx-auto px-6 max-w-6xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+      <footer className="border-t border-slate-100 bg-white py-8">
+        <div className="container mx-auto px-6 max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded-md bg-[#00685b] flex items-center justify-center text-white">
               <Plus size={14} strokeWidth={3} />
             </div>
             <span className="font-bold text-slate-900 text-sm">HealthQueue</span>
-            <span className="text-slate-400 ml-2">© {new Date().getFullYear()} HealthQueue Inc.</span>
+            <span className="text-slate-400 ml-2">© {new Date().getFullYear()} University of Lagos Medical Centre.</span>
           </div>
-          <div className="flex items-center gap-6">
-            <Link to="/auth/patient/login" className="hover:text-slate-900 transition-colors">Patient portal</Link>
-            <Link to="/auth/org/login"     className="hover:text-slate-900 transition-colors">Clinic portal</Link>
-            <span className="text-[#00685b] font-semibold">HIPAA Compliant</span>
+          <div className="flex items-center gap-6 text-xs text-slate-400">
+            <Link to="/auth/patient/login" className="hover:text-slate-900 transition-colors">Student portal</Link>
+            <Link to="/auth/org/login"     className="hover:text-slate-900 transition-colors">Staff portal</Link>
           </div>
         </div>
       </footer>
