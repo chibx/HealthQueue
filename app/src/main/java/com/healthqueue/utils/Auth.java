@@ -25,8 +25,6 @@ public class Auth {
     private static final int GCM_TAG_LENGTH_BITS = 128;
     public static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     public static final String HMAC256_ALGORITHM = "HmacSHA256";
-    public static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
-            Auth.HMAC256_ALGORITHM);
 
     // Base64 string form — safe as text, used as the Argon2 pepper
     public static final String HS256_SECRET_STRING = Utils.getEnv(Constants.SECRET_KEY);
@@ -35,6 +33,8 @@ public class Auth {
 
     public static final String AES_SECRET_STRING = Utils.getEnv(Constants.SECRET_KEY);
     public static final byte[] AES_SECRET_BYTE = Base64.getDecoder().decode(AES_SECRET_STRING);
+    public static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
+            Auth.HMAC256_ALGORITHM);
 
     public static GoReturn<String> encrypt(String text, SecretKey key) {
         return Utils.tryGo(() -> {
