@@ -92,7 +92,7 @@ Ensure you have the following installed on your system:
    export PORT=3000
    export DATABASE_URL="jdbc:postgresql://localhost:5432/healthqueue"
    export DB_USER="postgres"
-   export DB_PASSWORD="your_password"
+   export DB_PASS="your_password"
    ```
 2. Build and run the Spark backend server:
    ```bash
