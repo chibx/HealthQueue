@@ -3,7 +3,6 @@ package com.healthqueue.middlewares;
 import com.healthqueue.utils.Auth;
 import com.healthqueue.utils.AuthContext;
 import com.healthqueue.utils.Constants;
-import com.healthqueue.utils.Utils;
 import com.healthqueue.utils.AuthContext.UserCtx;
 import com.healthqueue.utils.Utils.GoReturn;
 
@@ -19,38 +18,23 @@ public class Middlewares {
         String orgCookie = req.cookie(Constants.ORG_ACCESS_COOKIE);
 
         if (orgCookie != null) {
-            GoReturn<Claims> ret = Auth.verifyJWT(orgCookie, null);
-            if (ret.error != null) {
-                try {
-                    String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
-                            Constants.UNAUTHORIZED);
-                    Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
-                } catch (Exception e) {
-                    Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
+            GoReturn<Claims> ret = Auth.verifyJWT(orgCookie, Auth.HS256_SECRET);
+            if (ret.error == null && ret.value != null) {
+                final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
+                if (orgCtx != null) {
+                    req.attribute(Constants.ORG_CTX, orgCtx);
                 }
-            }
-            final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
-            if (orgCtx != null) {
-                req.attribute(Constants.ORG_CTX, orgCtx);
             }
         }
 
         if (customerCookie != null) {
-            GoReturn<Claims> ret = Auth.verifyJWT(customerCookie, null);
-            if (ret.error != null) {
-                try {
-                    String errorBody = Utils.structuredResponse(Constants.STATUS_UNAUTHORIZED,
-                            Constants.UNAUTHORIZED);
-                    Spark.halt(Constants.STATUS_UNAUTHORIZED, errorBody);
-                } catch (Exception e) {
-                    Spark.halt(Constants.STATUS_INTERNAL_ERROR, Constants.INTERNAL_ERROR);
+            GoReturn<Claims> ret = Auth.verifyJWT(customerCookie, Auth.HS256_SECRET);
+            if (ret.error == null && ret.value != null) {
+                final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value);
+                if (userCtx != null) {
+                    req.attribute(Constants.USER_CTX, userCtx);
                 }
             }
-            final UserCtx userCtx = AuthContext.getUserCtxFromClaims(ret.value);
-            if (userCtx != null) {
-                req.attribute(Constants.USER_CTX, userCtx);
-            }
-
         }
     }
 

@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +25,8 @@ public class Auth {
     private static final int GCM_TAG_LENGTH_BITS = 128;
     public static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     public static final String HMAC256_ALGORITHM = "HmacSHA256";
+    public static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
+            Auth.HMAC256_ALGORITHM);
 
     // Base64 string form — safe as text, used as the Argon2 pepper
     public static final String HS256_SECRET_STRING = Utils.getEnv(Constants.SECRET_KEY);

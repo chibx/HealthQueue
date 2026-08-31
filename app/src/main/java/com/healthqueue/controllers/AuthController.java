@@ -30,18 +30,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import javax.crypto.SecretKey;
-
 import org.jspecify.annotations.Nullable;
 
 import spark.Request;
 import spark.Response;
-import javax.crypto.spec.SecretKeySpec;
 
 public class AuthController {
-
-    private static final SecretKey HS256_SECRET = new SecretKeySpec(Auth.HS256_SECRET_STRING.getBytes(),
-            Auth.HMAC256_ALGORITHM);
 
     public static Object RegisterPatient(Request request, Response response) throws Exception {
         final HealthQueueDB db = Utils.getDB();
@@ -92,7 +86,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}", accessJwtResult.error.getMessage());
@@ -151,7 +145,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}",
@@ -234,7 +228,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}",
@@ -285,7 +279,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}",
@@ -353,7 +347,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}",
@@ -411,7 +405,7 @@ public class AuthController {
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
-                HS256_SECRET,
+                Auth.HS256_SECRET,
                 MINUTES_30);
         if (accessJwtResult.error != null) {
             Utils.Logger.error("Error signing access JWT: {}", accessJwtResult.error.getMessage());
@@ -440,6 +434,7 @@ public class AuthController {
 
         try {
             db.patients().deleteSession(userCtx.uuid(), refreshToken);
+            Utils.Logger.info("\nWell well well\n");
         } catch (Exception e) {
             Utils.Logger.error("Error logging user out:", e);
         }
