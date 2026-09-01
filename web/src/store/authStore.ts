@@ -32,29 +32,41 @@ export const useAuthStore = create<AuthState>()(
 
       initialize: async () => {
         set({ isLoading: true });
-        try {
+        
+        const tryWhoami = async () => {
           const data = await authApi.whoami();
           if (data.user) {
-            set({
-              userId: data.user,
-              orgId: null,
-              role: 'patient',
-              userName: get().userName || 'Jane Doe',
-            });
+            set({ userId: data.user, orgId: null, role: 'patient', userName: get().userName || 'Jane Doe' });
+            return true;
           } else if (data.org) {
-            set({
-              userId: null,
-              orgId: data.org,
-              role: 'organization',
-              userName: get().userName || 'City General Hospital',
-            });
-          } else if (!get().role) {
-            set({ userId: null, orgId: null, role: null, userName: null, userEmail: null });
+            set({ userId: null, orgId: data.org, role: 'organization', userName: get().userName || 'City General Hospital' });
+            return true;
+          }
+          return false;
+        };
+
+        try {
+          const success = await tryWhoami();
+          if (!success) {
+            throw new Error('Not logged in');
           }
         } catch {
-          // If whoami fails and no local role is persisted, clear
-          if (!get().role) {
-            set({ userId: null, orgId: null, role: null });
+          // Attempt refresh
+          try {
+            const role = get().role;
+            if (role === 'patient') {
+              await authApi.refreshPatient();
+              const success = await tryWhoami();
+              if (!success) get().clear();
+            } else if (role === 'organization') {
+              await authApi.refreshOrganization();
+              const success = await tryWhoami();
+              if (!success) get().clear();
+            } else {
+              get().clear();
+            }
+          } catch {
+            get().clear();
           }
         } finally {
           set({ isLoading: false, isInitialized: true });

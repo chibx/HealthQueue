@@ -79,4 +79,16 @@ public class PatientModel {
         // dsl.query(null)
         return dsl.fetchExists(dsl.selectOne().from(USERS).where(USERS.ID.eq(id)));
     }
+
+    public UUID getSessionUserId(String token) throws DatabaseException {
+        try {
+            return dsl.select(USER_REFRESH_TOKENS.USER_ID)
+                    .from(USER_REFRESH_TOKENS)
+                    .where(USER_REFRESH_TOKENS.TOKEN.eq(token)
+                            .and(USER_REFRESH_TOKENS.EXPIRES_AT.gt(OffsetDateTime.now())))
+                    .fetchOneInto(UUID.class);
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
 }

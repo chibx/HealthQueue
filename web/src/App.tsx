@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RootLayout } from './components/layout/RootLayout';
 import { ProtectedRoute } from './components/shared/ProtectedRoute';
@@ -18,12 +18,19 @@ const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard'));
 const FindBranch       = lazy(() => import('./pages/patient/FindBranch'));
 const BookAppointment  = lazy(() => import('./pages/patient/BookAppointment'));
 const VisitHistory     = lazy(() => import('./pages/patient/VisitHistory'));
+const LiveQueue        = lazy(() => import('./pages/patient/LiveQueue'));
+const PatientProfile   = lazy(() => import('./pages/patient/PatientProfile'));
 
 // Org dashboard
 const OrgDashboard     = lazy(() => import('./pages/org/OrgDashboard'));
 const Branches         = lazy(() => import('./pages/org/Branches'));
 const Doctors          = lazy(() => import('./pages/org/Doctors'));
 const AppointmentQueue = lazy(() => import('./pages/org/AppointmentQueue'));
+const FastStatus       = lazy(() => import('./pages/org/FastStatus'));
+const Analytics        = lazy(() => import('./pages/org/Analytics'));
+const OrgSettings      = lazy(() => import('./pages/org/OrgSettings'));
+
+const NotFound         = lazy(() => import('./pages/NotFound'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,7 +70,9 @@ function AppRoutes() {
           <Route path="/patient"         element={<PatientDashboard />} />
           <Route path="/patient/find"    element={<FindBranch />} />
           <Route path="/patient/book"    element={<BookAppointment />} />
+          <Route path="/patient/queue"   element={<LiveQueue />} />
           <Route path="/patient/history" element={<VisitHistory />} />
+          <Route path="/patient/profile" element={<PatientProfile />} />
         </Route>
 
         {/* Organization dashboard — protected */}
@@ -78,10 +87,13 @@ function AppRoutes() {
           <Route path="/org/branches" element={<Branches />} />
           <Route path="/org/doctors"  element={<Doctors />} />
           <Route path="/org/queue"    element={<AppointmentQueue />} />
+          <Route path="/org/status"   element={<FastStatus />} />
+          <Route path="/org/analytics" element={<Analytics />} />
+          <Route path="/org/settings"  element={<OrgSettings />} />
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   );

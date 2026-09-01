@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Plus, LayoutGrid, GitBranch, Users, ListOrdered, LogOut, Menu, X } from 'lucide-react';
+import { Plus, LayoutGrid, GitBranch, Users, ListOrdered, LogOut, Menu, X, BarChart3, ScanLine, Settings } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../api/auth';
 
@@ -9,6 +9,9 @@ const navItems = [
   { to: '/org/branches', label: 'Branches',   icon: GitBranch },
   { to: '/org/doctors',  label: 'Doctors',    icon: Users },
   { to: '/org/queue',    label: 'Live Queue', icon: ListOrdered },
+  { to: '/org/status',   label: 'Fast Status',icon: ScanLine },
+  { to: '/org/analytics',label: 'Analytics',  icon: BarChart3 },
+  { to: '/org/settings', label: 'Settings',   icon: Settings },
 ];
 
 export function OrgNav() {
