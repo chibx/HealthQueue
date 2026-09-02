@@ -18,7 +18,6 @@ type FormData = z.infer<typeof schema>;
 export default function PatientLogin() {
   const navigate = useNavigate();
   const initialize = useAuthStore((s) => s.initialize);
-  const setPatient = useAuthStore((s) => s.setPatient);
 
   const {
     register,
@@ -29,10 +28,7 @@ export default function PatientLogin() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const res = (await authApi.loginPatient(data)) as unknown as { name?: string } | undefined;
-      const derivedName = data.email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-      const name = res?.name ?? derivedName;
-      setPatient('', name, data.email);
+      await authApi.loginPatient(data);
       await initialize();
       navigate('/patient');
     } catch (err) {

@@ -36,10 +36,24 @@ export const useAuthStore = create<AuthState>()(
         const tryWhoami = async () => {
           const data = await authApi.whoami();
           if (data.user) {
-            set({ userId: data.user, orgId: null, role: 'patient', userName: get().userName || 'Jane Doe' });
+            try {
+              const profile = await authApi.getPatientProfile();
+              const fullName = profile?.fullName || profile?.full_name || (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : null) || get().userName || 'Jane Doe';
+              const email = profile?.email || get().userEmail || 'jane@example.com';
+              set({ userId: data.user, orgId: null, role: 'patient', userName: fullName, userEmail: email });
+            } catch (err) {
+              set({ userId: data.user, orgId: null, role: 'patient', userName: get().userName || 'Jane Doe' });
+            }
             return true;
           } else if (data.org) {
-            set({ userId: null, orgId: data.org, role: 'organization', userName: get().userName || 'City General Hospital' });
+            try {
+              const profile = await authApi.getOrgProfile();
+              const name = profile?.name || profile?.organizationName || profile?.organization_name || get().userName || 'City General Hospital';
+              const email = profile?.email || get().userEmail || 'admin@hospital.com';
+              set({ userId: null, orgId: data.org, role: 'organization', userName: name, userEmail: email });
+            } catch (err) {
+              set({ userId: null, orgId: data.org, role: 'organization', userName: get().userName || 'City General Hospital' });
+            }
             return true;
           }
           return false;

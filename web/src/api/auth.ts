@@ -37,4 +37,11 @@ export const authApi = {
   // ---- Shared ----
   whoami: () =>
     get<WhoamiResponse>('/auth/whoami'),
+
+  // ---- Profile ----
+  getPatientProfile: () =>
+    get<any>('/profile/patient'),
+
+  getOrgProfile: () =>
+    get<any>('/profile/organization'),
 };
