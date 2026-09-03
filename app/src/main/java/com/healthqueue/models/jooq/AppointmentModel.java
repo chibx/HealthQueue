@@ -6,14 +6,13 @@ import java.time.ZoneId;
 import java.util.UUID;
 import org.jooq.DSLContext;
 
-import com.healthqueue.models.Interfaces;
 import com.healthqueue.models.Types.CreateAppointmentParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Types.ReassignDoctorParams;
 import com.healthqueue.models.Types.UpdateAppointmentParams;
 import com.healthqueue.models.Values.Appointment;
 
-public class AppointmentModel implements Interfaces.Appointments {
+public class AppointmentModel {
     final DSLContext dsl;
 
     public AppointmentModel(DSLContext dsl) {
@@ -55,7 +54,6 @@ public class AppointmentModel implements Interfaces.Appointments {
         }
     }
 
-    @Override
     public void updateStatus(UpdateAppointmentParams params) throws DatabaseException {
         try {
             dsl.update(APPOINTMENTS)
@@ -76,7 +74,6 @@ public class AppointmentModel implements Interfaces.Appointments {
         }
     }
 
-    @Override
     public void reassignDoctor(ReassignDoctorParams params) throws DatabaseException {
         try {
             dsl.update(APPOINTMENTS)
@@ -88,7 +85,6 @@ public class AppointmentModel implements Interfaces.Appointments {
         }
     }
 
-    @Override
     public Appointment getAppointmentDetails(long appointmentId) throws DatabaseException {
         try {
             return dsl.selectFrom(APPOINTMENTS)
@@ -122,7 +118,7 @@ public class AppointmentModel implements Interfaces.Appointments {
                     .on(APPOINTMENTS.BRANCH_ID.eq(com.healthqueue.db.Tables.BRANCHES.ID))
                     .where(APPOINTMENTS.ID.eq(appointmentId),
                             com.healthqueue.db.Tables.BRANCHES.ORGANIZATION_ID.eq(organizationId))
-                .fetchOne() != null;
+                    .fetchOne() != null;
             return exists ? getAppointmentDetails(appointmentId) : null;
         } catch (Exception e) {
             throw new DatabaseException(e);

@@ -67,6 +67,16 @@ public class Values {
         }
     }
 
+    public static class GetDoctorLogin {
+        public final long id;
+        public final String passwordHash;
+
+        public GetDoctorLogin(long id, String passwordHash) {
+            this.id = id;
+            this.passwordHash = passwordHash;
+        }
+    }
+
     public static class GetNearestBranches {
         public final long id;
         public final String name;

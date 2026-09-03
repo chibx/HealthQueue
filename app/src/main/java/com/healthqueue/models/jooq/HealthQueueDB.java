@@ -2,7 +2,7 @@ package com.healthqueue.models.jooq;
 
 import org.jooq.DSLContext;
 
-import com.healthqueue.models.Interfaces.TransactionFn;
+import com.healthqueue.models.Types.TransactionFn;
 import com.healthqueue.models.Types.DatabaseException;
 
 public class HealthQueueDB {

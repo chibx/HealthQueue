@@ -39,7 +39,7 @@ public class ServerResponse {
     // AUTHENTICATION RESPONSES
     // ==========================================
 
-    public record WhoamiResponse(UUID user, UUID org) {
+        public record WhoamiResponse(UUID user, UUID org, Long doctor) {
     }
 
     public record AuthResponse(

@@ -2,6 +2,7 @@ package com.healthqueue.middlewares;
 
 import com.healthqueue.utils.Auth;
 import com.healthqueue.utils.AuthContext;
+import com.healthqueue.utils.AuthContext.DoctorCtx;
 import com.healthqueue.utils.Constants;
 import com.healthqueue.utils.AuthContext.UserCtx;
 import com.healthqueue.utils.Utils.GoReturn;
@@ -15,6 +16,7 @@ public class Middlewares {
 
     public static void InjectAuthCtx(Request req, Response res) {
         String customerCookie = req.cookie(Constants.PATIENT_ACCESS_COOKIE);
+        String doctorCookie = req.cookie(Constants.DOCTOR_ACCESS_COOKIE);
         String orgCookie = req.cookie(Constants.ORG_ACCESS_COOKIE);
 
         if (orgCookie != null) {
@@ -23,6 +25,16 @@ public class Middlewares {
                 final UserCtx orgCtx = AuthContext.getUserCtxFromClaims(ret.value);
                 if (orgCtx != null) {
                     req.attribute(Constants.ORG_CTX, orgCtx);
+                }
+            }
+        }
+
+        if (doctorCookie != null) {
+            GoReturn<Claims> ret = Auth.verifyJWT(doctorCookie, Auth.HS256_SECRET);
+            if (ret.error == null && ret.value != null) {
+                final DoctorCtx doctorCtx = AuthContext.getDoctorCtxFromClaims(ret.value);
+                if (doctorCtx != null) {
+                    req.attribute(Constants.DOCTOR_CTX, doctorCtx);
                 }
             }
         }

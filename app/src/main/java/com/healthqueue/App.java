@@ -48,6 +48,9 @@ public class App {
                 Spark.post("/patient/login", AuthController::LoginPatient);
                 Spark.post("/patient/refresh", AuthController::RefreshPatient);
                 Spark.post("/patient/logout", AuthController::LogoutPatient);
+                Spark.post("/doctor/login", AuthController::LoginDoctor);
+                Spark.post("/doctor/refresh", AuthController::RefreshDoctor);
+                Spark.post("/doctor/logout", AuthController::LogoutDoctor);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
