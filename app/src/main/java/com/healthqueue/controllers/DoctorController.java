@@ -1,6 +1,7 @@
 package com.healthqueue.controllers;
 
 import static com.healthqueue.utils.Constants.BAD_REQUEST;
+import static com.healthqueue.utils.Constants.INTERNAL_ERROR;
 import static com.healthqueue.utils.Constants.ORG_CTX;
 import static com.healthqueue.utils.Constants.STATUS_BAD_REQUEST;
 import static com.healthqueue.utils.Constants.STATUS_INTERNAL_ERROR;
@@ -47,7 +48,7 @@ public class DoctorController {
 
         var hashResult = Auth.hashText(body.password());
         if (hashResult.error != null) {
-            throw new ServerError(STATUS_INTERNAL_ERROR, com.healthqueue.utils.Constants.INTERNAL_ERROR);
+            throw new ServerError(STATUS_INTERNAL_ERROR, INTERNAL_ERROR);
         }
         CreateStaffParams params = CreateStaffParams.builder()
                 .id(Utils.nextSnowflakeId()).branchId(body.branchId()).firstName(body.firstName())
