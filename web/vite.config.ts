@@ -10,7 +10,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://healthqueue-r2fo.onrender.com/',
         changeOrigin: true,
         configure: (proxy) => {
           proxy.on('error', (_err, _req, res) => {

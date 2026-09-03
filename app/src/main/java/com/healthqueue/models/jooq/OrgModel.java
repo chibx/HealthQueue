@@ -89,6 +89,18 @@ public class OrgModel {
         return dsl.fetchExists(dsl.selectOne().from(ORGANIZATIONS).where(ORGANIZATIONS.ID.eq(id)));
     }
 
+    public UUID getSessionOrgId(String token) throws DatabaseException {
+        try {
+            return dsl.select(ORG_REFRESH_TOKENS.ORGANIZATION_ID)
+                    .from(ORG_REFRESH_TOKENS)
+                    .where(ORG_REFRESH_TOKENS.TOKEN.eq(token)
+                            .and(ORG_REFRESH_TOKENS.EXPIRES_AT.gt(OffsetDateTime.now())))
+                    .fetchOneInto(UUID.class);
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
     public List<GetNearestBranches> getNearestBranches(double userLongitude, double userLatitude)
             throws DatabaseException {
         return getNearestBranches(userLongitude, userLatitude, Constants.DEFAULT_LIMIT);

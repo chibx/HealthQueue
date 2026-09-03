@@ -1,4 +1,5 @@
 import type { ApiError, StructuredResponse } from '../types';
+import { useAuthStore } from '../store/authStore';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -44,18 +45,59 @@ async function parseResponse<T>(res: Response): Promise<T> {
   return json as T;
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
 export async function apiFetch<T = void>(
   path: string,
   options: RequestInit = {},
+  isRetry = false
 ): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const reqOptions = {
     ...options,
-    credentials: 'include', // send HttpOnly auth cookies
+    credentials: 'include' as RequestCredentials,
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
     },
-  });
+  };
+
+  const res = await fetch(`${BASE_URL}${path}`, reqOptions);
+
+  if (res.status === 401 && !isRetry && !path.includes('/auth/login') && !path.includes('/auth/register') && !path.includes('/auth/refresh') && !path.includes('/auth/whoami')) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      refreshPromise = (async () => {
+        try {
+          const role = useAuthStore.getState().role;
+          if (!role) return false;
+          
+          const refreshPath = role === 'patient' ? '/auth/patient/refresh' : '/auth/organization/refresh';
+          const refreshRes = await fetch(`${BASE_URL}${refreshPath}`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+          
+          if (!refreshRes.ok) {
+            useAuthStore.getState().clear();
+            return false;
+          }
+          return true;
+        } catch {
+          useAuthStore.getState().clear();
+          return false;
+        } finally {
+          isRefreshing = false;
+        }
+      })();
+    }
+
+    const success = await refreshPromise;
+    if (success) {
+      const retryRes = await fetch(`${BASE_URL}${path}`, reqOptions);
+      return parseResponse<T>(retryRes);
+    }
+  }
 
   return parseResponse<T>(res);
 }

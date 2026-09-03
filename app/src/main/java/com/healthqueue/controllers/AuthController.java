@@ -308,32 +308,27 @@ public class AuthController {
 
         String ipAddr = request.ip();
         @Nullable
-        UserCtx userCtx = request.attribute(USER_CTX);
-        if (userCtx == null) {
-            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        }
-
-        // boolean userExists = db.patients().exists(userCtx.uuid());
-        // if (!userExists) {
-        // throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        // }
-
-        @Nullable
         String refreshToken = request.cookie(PATIENT_REFRESH_COOKIE);
         if (refreshToken == null) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
+
+        UUID userId = db.patients().getSessionUserId(refreshToken);
+        if (userId == null) {
+            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        }
+
         String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
         try {
             db.runTx((tx) -> {
                 CreatePatientSessionParams params = CreatePatientSessionParams.builder()
-                        .id(userCtx.uuid())
+                        .id(userId)
                         .token(newRefreshToken).ipAddr(ipAddr)
                         .expiryDate(Utils.addToDate(DAYS_7))
                         .build();
 
-                tx.patients().deleteSession(userCtx.uuid(), refreshToken);
+                tx.patients().deleteSession(userId, refreshToken);
                 tx.patients().createSession(params);
             });
         } catch (Exception e) {
@@ -342,8 +337,8 @@ public class AuthController {
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", userCtx.uuid(),
-                "type", userCtx.type());
+                "uuid", userId.toString(),
+                "type", PATIENT);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,
@@ -366,32 +361,27 @@ public class AuthController {
         String ipAddr = request.ip();
 
         @Nullable
-        UserCtx orgCtx = request.attribute(ORG_CTX);
-        if (orgCtx == null) {
-            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        }
-
-        // boolean orgExists = db.organizations().exists(orgCtx.uuid());
-        // if (!orgExists) {
-        // throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
-        // }
-
-        @Nullable
         String refreshToken = request.cookie(ORG_REFRESH_COOKIE);
         if (refreshToken == null) {
             throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
         }
+
+        UUID orgId = db.organizations().getSessionOrgId(refreshToken);
+        if (orgId == null) {
+            throw new ServerError(STATUS_UNAUTHORIZED, UNAUTHORIZED);
+        }
+
         String newRefreshToken = Utils.cryptoRandomString(REFRESH_TOKEN_LENGTH);
 
         try {
             db.runTx((tx) -> {
                 CreateOrgSessionParams params = CreateOrgSessionParams.builder()
-                        .id(orgCtx.uuid())
+                        .id(orgId)
                         .token(newRefreshToken).ipAddr(ipAddr)
                         .expiryDate(Utils.addToDate(DAYS_7))
                         .build();
 
-                tx.organizations().deleteSession(orgCtx.uuid(), refreshToken);
+                tx.organizations().deleteSession(orgId, refreshToken);
                 tx.organizations().createSession(params);
             });
         } catch (Exception e) {
@@ -400,8 +390,8 @@ public class AuthController {
         }
 
         Map<String, Object> claims = Map.of(
-                "uuid", orgCtx.uuid(),
-                "type", orgCtx.type());
+                "uuid", orgId.toString(),
+                "type", ORG_KEY);
 
         GoReturn<String> accessJwtResult = Auth.signJWT(
                 claims,

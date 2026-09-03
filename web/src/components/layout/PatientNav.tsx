@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Plus, Calendar, MapPin, ClipboardList, LogOut, Menu, X, Activity } from 'lucide-react';
+import { Plus, Calendar, MapPin, ClipboardList, LogOut, Menu, X, Activity, Ticket, User } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authApi } from '../../api/auth';
 
@@ -8,7 +8,9 @@ const navItems = [
   { to: '/patient',         label: 'Dashboard',   icon: Activity },
   { to: '/patient/find',    label: 'Find Clinic', icon: MapPin },
   { to: '/patient/book',    label: 'Book Visit',  icon: Calendar },
+  { to: '/patient/queue',   label: 'Live Queue',  icon: Ticket },
   { to: '/patient/history', label: 'History',     icon: ClipboardList },
+  { to: '/patient/profile', label: 'Profile',     icon: User },
 ];
 
 export function PatientNav() {

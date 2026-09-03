@@ -87,6 +87,20 @@ public class App {
             });
         });
 
+        Spark.notFound((req, res) -> {
+            if (!req.pathInfo().startsWith("/api")) {
+                res.type("text/html");
+                try {
+                    java.nio.file.Path indexPath = Paths.get("").toAbsolutePath().resolve("./web/dist/index.html").normalize();
+                    if (java.nio.file.Files.exists(indexPath)) {
+                        return java.nio.file.Files.readString(indexPath);
+                    }
+                } catch (Exception ignored) {}
+            }
+            res.type("application/json");
+            return "{\"status\":404,\"message\":\"Not Found\"}";
+        });
+
         Spark.init();
     }
 }
