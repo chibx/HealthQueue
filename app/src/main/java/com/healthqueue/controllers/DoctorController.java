@@ -88,6 +88,7 @@ public class DoctorController {
             throw new ServerError(STATUS_BAD_REQUEST, BAD_REQUEST, Utils.toValidationErrors(violations));
         }
 
+        // TODO: Batch
         if (!db.doctors().belongsToBranch(body.doctorId(), body.branchId())
                 || !db.branches().belongsToOrganization(body.newBranchId(), orgCtx.uuid())) {
             throw new ServerError(STATUS_NOT_FOUND, "Doctor or branch not found.");
