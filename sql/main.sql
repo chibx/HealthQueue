@@ -113,7 +113,6 @@ ALTER TABLE doctors ADD COLUMN email TEXT;
 ALTER TABLE doctors ADD COLUMN password_hash TEXT;
 ALTER TABLE doctors ALTER COLUMN email SET NOT NULL;
 ALTER TABLE doctors ALTER COLUMN password_hash SET NOT NULL;
-ALTER TABLE doctors ADD CONSTRAINT doctors_email_key UNIQUE (email);
 
 CREATE TABLE doctor_refresh_tokens (
     doctor_id BIGINT NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
