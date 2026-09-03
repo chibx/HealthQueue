@@ -9,10 +9,14 @@ public class Constants {
     public static final String ORG_CTX = "ORG_CTX";
     public static final String PATIENT_ACCESS_COOKIE = "cust_access_tk";
     public static final String PATIENT_REFRESH_COOKIE = "cust_refresh_tk";
+    public static final String DOCTOR_ACCESS_COOKIE = "doctor_access_tk";
+    public static final String DOCTOR_REFRESH_COOKIE = "doctor_refresh_tk";
     public static final String ORG_ACCESS_COOKIE = "org_access_tk";
     public static final String ORG_REFRESH_COOKIE = "org_refresh_tk";
+    public static final String DOCTOR_CTX = "DOCTOR_CTX";
     public static final String ORG_KEY = "organization";
     public static final String PATIENT = "patient";
+    public static final String DOCTOR = "doctor";
 
     public static final String SECRET_KEY = "SECRET_KEY";
 

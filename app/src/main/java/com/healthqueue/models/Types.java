@@ -5,12 +5,18 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.Builder;
 import com.healthqueue.db.enums.AppointmentStatus;
+import com.healthqueue.models.jooq.HealthQueueDB;
 
 public class Types {
     public static class DatabaseException extends Exception {
         public DatabaseException(Throwable cause) {
             super(cause);
         }
+    }
+
+    @FunctionalInterface
+    public interface TransactionFn {
+        void run(HealthQueueDB db) throws Exception;
     }
 
     @Builder
@@ -55,6 +61,16 @@ public class Types {
         public String lastName;
         public String specialty;
         public long branchId;
+        public String email;
+        public String passwordHash;
+    }
+
+    @Builder
+    public static class CreateDoctorSessionParams {
+        public long id;
+        public String ipAddr;
+        public String token;
+        public Instant expiryDate;
     }
 
     @Builder

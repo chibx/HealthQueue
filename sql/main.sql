@@ -107,3 +107,21 @@ CREATE INDEX idx_branches_spatial ON branches USING GIST ( (ST_SetSRID(ST_MakePo
 CREATE INDEX idx_appointments_user ON appointments(user_id);
 CREATE INDEX idx_appointments_doctor_time ON appointments(doctor_id, scheduled_start_time);
 CREATE INDEX idx_appointments_status ON appointments(status);
+
+-- Migration for doctor authentication. Run after the existing schema is deployed.
+ALTER TABLE doctors ADD COLUMN email TEXT;
+ALTER TABLE doctors ADD COLUMN password_hash TEXT;
+ALTER TABLE doctors ALTER COLUMN email SET NOT NULL;
+ALTER TABLE doctors ALTER COLUMN password_hash SET NOT NULL;
+ALTER TABLE doctors ADD CONSTRAINT doctors_email_key UNIQUE (email);
+
+CREATE TABLE doctor_refresh_tokens (
+    doctor_id BIGINT NOT NULL REFERENCES doctors(id) ON DELETE CASCADE,
+    token TEXT NOT NULL,
+    ip TEXT NOT NULL,
+    used BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX idx_doctor_refresh_token ON doctor_refresh_tokens(doctor_id);

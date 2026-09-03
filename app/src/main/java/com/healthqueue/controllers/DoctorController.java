@@ -3,6 +3,7 @@ package com.healthqueue.controllers;
 import static com.healthqueue.utils.Constants.BAD_REQUEST;
 import static com.healthqueue.utils.Constants.ORG_CTX;
 import static com.healthqueue.utils.Constants.STATUS_BAD_REQUEST;
+import static com.healthqueue.utils.Constants.STATUS_INTERNAL_ERROR;
 import static com.healthqueue.utils.Constants.STATUS_OK;
 import static com.healthqueue.utils.Constants.STATUS_UNAUTHORIZED;
 import static com.healthqueue.utils.Constants.STATUS_NOT_FOUND;
@@ -15,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 import com.healthqueue.models.Types.CreateStaffParams;
 import com.healthqueue.models.jooq.HealthQueueDB;
 import com.healthqueue.utils.Utils;
+import com.healthqueue.utils.Auth;
 
 import jakarta.validation.ConstraintViolation;
 
@@ -43,9 +45,14 @@ public class DoctorController {
             throw new ServerError(STATUS_NOT_FOUND, "Branch not found.");
         }
 
+        var hashResult = Auth.hashText(body.password());
+        if (hashResult.error != null) {
+            throw new ServerError(STATUS_INTERNAL_ERROR, com.healthqueue.utils.Constants.INTERNAL_ERROR);
+        }
         CreateStaffParams params = CreateStaffParams.builder()
                 .id(Utils.nextSnowflakeId()).branchId(body.branchId()).firstName(body.firstName())
-                .lastName(body.lastName()).specialty(body.specialty()).build();
+                .lastName(body.lastName()).specialty(body.specialty()).email(body.email())
+                .passwordHash(hashResult.value).build();
 
         db.doctors().create(params);
 

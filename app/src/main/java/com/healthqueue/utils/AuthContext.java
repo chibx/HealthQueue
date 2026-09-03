@@ -12,6 +12,9 @@ public class AuthContext {
     public static record UserCtx(UUID uuid, String type) {
     }
 
+    public static record DoctorCtx(long doctorId, String type) {
+    }
+
     public static @Nullable UserCtx getUserCtxFromClaims(Claims claims) {
         if (claims == null) {
             return null;
@@ -32,5 +35,17 @@ public class AuthContext {
         final UserCtx userCtx = new UserCtx(UuidCreator.fromString(uuid), type);
 
         return userCtx;
+    }
+
+    public static @Nullable DoctorCtx getDoctorCtxFromClaims(Claims claims) {
+        if (claims == null) {
+            return null;
+        }
+        final @Nullable Number doctorId = claims.get("doctorId", Number.class);
+        final @Nullable String type = claims.get("type", String.class);
+        if (doctorId == null || type == null || !Constants.DOCTOR.equals(type) || doctorId.longValue() < 1) {
+            return null;
+        }
+        return new DoctorCtx(doctorId.longValue(), type);
     }
 }
