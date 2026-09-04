@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthState>()(
               const fullName = profile?.fullName || `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || 'Dr. Medical Staff';
               const email = profile?.email || get().userEmail || '';
               set({ doctorId: data.doctor, userId: null, orgId: null, role: 'doctor', userName: fullName, userEmail: email });
-            } catch (err) {
+            } catch {
               set({ doctorId: data.doctor, userId: null, orgId: null, role: 'doctor', userName: get().userName || 'Dr. Medical Staff' });
             }
             return true;
@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>()(
               const fullName = profile?.fullName || `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || 'Patient Member';
               const email = profile?.email || get().userEmail || '';
               set({ userId: data.user, orgId: null, doctorId: null, role: 'patient', userName: fullName, userEmail: email });
-            } catch (err) {
+            } catch {
               set({ userId: data.user, orgId: null, doctorId: null, role: 'patient', userName: get().userName || 'Patient Member' });
             }
             return true;
@@ -64,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
               const name = profile?.name || 'Medical Centre';
               const email = profile?.email || get().userEmail || '';
               set({ userId: null, orgId: data.org, doctorId: null, role: 'organization', userName: name, userEmail: email });
-            } catch (err) {
+            } catch {
               set({ userId: null, orgId: data.org, doctorId: null, role: 'organization', userName: get().userName || 'Medical Centre' });
             }
             return true;
