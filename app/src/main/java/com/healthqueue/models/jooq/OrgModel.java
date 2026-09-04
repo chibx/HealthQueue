@@ -146,6 +146,18 @@ public class OrgModel {
         } catch (Exception e) {
             throw new DatabaseException(e);
         }
+    }
 
+    public OrgProfile getProfile(UUID id) throws DatabaseException {
+        try {
+            return dsl.select(ORGANIZATIONS.NAME, ORGANIZATIONS.EMAIL)
+                    .from(ORGANIZATIONS)
+                    .where(ORGANIZATIONS.ID.eq(id))
+                    .fetchOne(r -> new OrgProfile(
+                            r.get(ORGANIZATIONS.NAME),
+                            r.get(ORGANIZATIONS.EMAIL)));
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
     }
 }

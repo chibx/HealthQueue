@@ -10,7 +10,7 @@ export type AppointmentStatus =
   | 'OVERSTAYED'
   | 'CANCELLED';
 
-export type UserRole = 'patient' | 'organization';
+export type UserRole = 'patient' | 'organization' | 'doctor';
 
 // =============================================
 // BASE API STRUCTURES
@@ -46,6 +46,29 @@ export interface ApiError {
 export interface WhoamiResponse {
   user: string | null; // UUID
   org: string | null; // UUID
+  doctor?: number | null;
+}
+
+export interface PatientProfileResponse {
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+}
+
+export interface OrgProfileResponse {
+  name: string;
+  email: string;
+}
+
+export interface DoctorProfileResponse {
+  id: number;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  specialty: string;
+  email: string;
+  organizationName: string;
 }
 
 export interface AuthResponse {
@@ -167,6 +190,12 @@ export interface OrgLoginRequest {
   password: string;
 }
 
+export interface DoctorLoginRequest {
+  organizationName: string;
+  email: string;
+  password: string;
+}
+
 export interface CreateBranchRequest {
   organizationId: string;
   name: string;
@@ -180,6 +209,8 @@ export interface CreateDoctorRequest {
   firstName: string;
   lastName: string;
   specialty: string;
+  email: string;
+  password: string;
 }
 
 export interface CreateAppointmentRequest {

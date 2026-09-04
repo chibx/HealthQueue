@@ -14,6 +14,7 @@ import com.healthqueue.models.Types.CreatePatientSessionParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Values.CreatePatient;
 import com.healthqueue.models.Values.GetPatientLogin;
+import com.healthqueue.models.Values.PatientProfile;
 
 public class PatientModel {
     final DSLContext dsl;
@@ -87,6 +88,20 @@ public class PatientModel {
                     .where(USER_REFRESH_TOKENS.TOKEN.eq(token)
                             .and(USER_REFRESH_TOKENS.EXPIRES_AT.gt(OffsetDateTime.now())))
                     .fetchOneInto(UUID.class);
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public PatientProfile getProfile(UUID id) throws DatabaseException {
+        try {
+            return dsl.select(USERS.FIRST_NAME, USERS.LAST_NAME, USERS.EMAIL)
+                    .from(USERS)
+                    .where(USERS.ID.eq(id))
+                    .fetchOne(r -> new PatientProfile(
+                            r.get(USERS.FIRST_NAME),
+                            r.get(USERS.LAST_NAME),
+                            r.get(USERS.EMAIL)));
         } catch (Exception e) {
             throw new DatabaseException(e);
         }

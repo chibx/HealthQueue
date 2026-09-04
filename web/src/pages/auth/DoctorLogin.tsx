@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, Mail, Lock, KeyRound, Plus, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Plus, Stethoscope, Building2, ShieldCheck, ArrowLeft, Clock } from 'lucide-react';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { authApi } from '../../api/auth';
@@ -10,14 +10,13 @@ import { useAuthStore } from '../../store/authStore';
 import { getErrorMessage, getFieldErrors } from '../../utils/errors';
 
 const schema = z.object({
-  name: z.string().min(1, 'Organization name is required'),
-  registrationCode: z.string().min(1, 'Registration code is required'),
-  email: z.string().email('Enter a valid email address'),
+  organizationName: z.string().min(1, 'Organization name is required'),
+  email: z.string().email('Enter your registered staff email address'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(20),
 });
 type FormData = z.infer<typeof schema>;
 
-export default function OrgRegister() {
+export default function DoctorLogin() {
   const navigate = useNavigate();
   const initialize = useAuthStore((s) => s.initialize);
 
@@ -30,10 +29,9 @@ export default function OrgRegister() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await authApi.registerOrganization(data);
-      useAuthStore.getState().setOrg('', data.name, data.email);
+      await authApi.loginDoctor(data);
       await initialize();
-      navigate('/org');
+      navigate('/doctor');
     } catch (err) {
       const fieldErrors = getFieldErrors(err);
       if (Object.keys(fieldErrors).length > 0) {
@@ -48,16 +46,16 @@ export default function OrgRegister() {
 
   return (
     <div className="min-h-screen bg-[#f7f9f8] text-slate-800 flex flex-col justify-center items-center px-4 py-12 relative">
-      {/* Back button */}
+      {/* Top back button */}
       <div className="w-full max-w-4xl mb-6">
         <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors">
           <ArrowLeft size={14} /> Back to HealthQueue Home
         </Link>
       </div>
 
-      {/* Container Card */}
+      {/* Main Container Card */}
       <div className="w-full max-w-4xl grid md:grid-cols-12 rounded-3xl border border-slate-200 bg-white shadow-xl overflow-hidden">
-        {/* Left Side Highlights */}
+        {/* Left Side Highlight Panel */}
         <div className="md:col-span-5 bg-[#0b3b36] text-white p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-teal-900">
           <div>
             <div className="flex items-center gap-2.5 mb-8">
@@ -67,76 +65,84 @@ export default function OrgRegister() {
               <span className="font-bold text-white tracking-tight text-lg">HealthQueue</span>
             </div>
 
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-800/60 text-teal-200 text-[11px] font-semibold tracking-wide uppercase mb-3">
+              <Stethoscope size={13} />
+              Medical Staff Portal
+            </div>
+
             <h2 className="text-2xl font-extrabold text-white tracking-tight leading-tight mb-3">
-              Register your hospital or clinic branch.
+              Welcome to Clinical Operations.
             </h2>
             <p className="text-teal-100/80 text-xs leading-relaxed mb-6">
-              You'll need an authorized registration code provided by HealthQueue administration to activate your organization.
+              Sign in with your assigned organization credentials to manage patient queues, call patients, and record consultations.
             </p>
 
-            <div className="space-y-3 pt-4 border-t border-teal-800/80">
-              <div className="flex items-center gap-2.5 text-xs text-teal-100">
-                <ShieldCheck size={15} className="text-teal-300" />
-                <span>Verified medical provider license</span>
+            <div className="space-y-4 pt-4 border-t border-teal-800/80">
+              <div className="flex items-start gap-3 text-xs text-teal-100">
+                <div className="p-1 rounded-md bg-[#00685b] text-white shrink-0 mt-0.5">
+                  <Clock size={14} />
+                </div>
+                <span>Real-time patient queue calling &amp; triage</span>
               </div>
-              <div className="flex items-center gap-2.5 text-xs text-teal-100">
-                <ShieldCheck size={15} className="text-teal-300" />
-                <span>Unlimited branch & doctor seats</span>
+              <div className="flex items-start gap-3 text-xs text-teal-100">
+                <div className="p-1 rounded-md bg-[#00685b] text-white shrink-0 mt-0.5">
+                  <ShieldCheck size={14} />
+                </div>
+                <span>Secured clinical notes &amp; visit records</span>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200">
-            Already registered?{' '}
-            <Link to="/auth/org/login" className="text-white font-bold underline hover:text-teal-100">
-              Sign in →
-            </Link>
+          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200 flex flex-col gap-1">
+            <span>
+              Are you a student or patient?{' '}
+              <Link to="/auth/patient/login" className="text-white font-bold underline hover:text-teal-100">
+                Student Portal →
+              </Link>
+            </span>
+            <span>
+              Clinic administrator?{' '}
+              <Link to="/auth/org/login" className="text-white font-bold underline hover:text-teal-100">
+                Clinic Portal →
+              </Link>
+            </span>
           </div>
         </div>
 
-        {/* Right Side Form */}
+        {/* Right Side Form Panel */}
         <div className="md:col-span-7 p-8 sm:p-10 flex flex-col justify-center bg-white">
           <div className="mb-6">
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Register Organization</h1>
-            <p className="text-slate-500 text-xs mt-1">Enter your organization details and registration key.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Staff Sign In</h1>
+            <p className="text-slate-500 text-xs mt-1">For practicing doctors, nurses, and clinical specialists.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
-              id="name"
-              label="Organization Legal Name"
-              placeholder="City General Healthcare Group"
-              leftIcon={<Building2 size={14} />}
-              error={errors.name?.message}
-              {...register('name')}
-            />
-
-            <Input
-              id="registrationCode"
-              label="Authorization Code"
-              placeholder="HQ-XXXX-XXXX"
-              leftIcon={<KeyRound size={14} />}
-              hint="Issued by HealthQueue admin representative"
-              error={errors.registrationCode?.message}
-              {...register('registrationCode')}
+              id="organizationName"
+              label="Organization Name"
+              type="text"
+              placeholder="e.g. UNILAG Medical Centre"
+              leftIcon={<Building2 size={15} />}
+              error={errors.organizationName?.message}
+              {...register('organizationName')}
             />
 
             <Input
               id="email"
-              label="Admin Work Email"
+              label="Staff Email Address"
               type="email"
-              placeholder="admin@hospital.com"
-              leftIcon={<Mail size={14} />}
+              placeholder="dr.sarah@unilagmed.edu.ng"
+              leftIcon={<Mail size={15} />}
               error={errors.email?.message}
               {...register('email')}
             />
 
             <Input
               id="password"
-              label="Admin Account Password"
+              label="Password"
               type="password"
               placeholder="••••••••"
-              leftIcon={<Lock size={14} />}
+              leftIcon={<Lock size={15} />}
               error={errors.password?.message}
               {...register('password')}
             />
@@ -148,19 +154,18 @@ export default function OrgRegister() {
             )}
 
             <Button type="submit" isLoading={isSubmitting} size="lg" className="mt-2 w-full bg-[#00685b] text-white rounded-full">
-              Complete Registration
+              Sign In to Staff Console
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
-            Already registered?{' '}
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-500">
+            Staff accounts are provisioned by clinic administrators.{' '}
             <Link to="/auth/org/login" className="text-[#00685b] font-bold hover:underline">
-              Sign in
+              Contact your clinic admin
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

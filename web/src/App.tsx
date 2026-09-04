@@ -12,6 +12,7 @@ const PatientLogin     = lazy(() => import('./pages/auth/PatientLogin'));
 const PatientRegister  = lazy(() => import('./pages/auth/PatientRegister'));
 const OrgLogin         = lazy(() => import('./pages/auth/OrgLogin'));
 const OrgRegister      = lazy(() => import('./pages/auth/OrgRegister'));
+const DoctorLogin      = lazy(() => import('./pages/auth/DoctorLogin'));
 
 // Patient portal
 const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard'));
@@ -20,6 +21,9 @@ const BookAppointment  = lazy(() => import('./pages/patient/BookAppointment'));
 const VisitHistory     = lazy(() => import('./pages/patient/VisitHistory'));
 const LiveQueue        = lazy(() => import('./pages/patient/LiveQueue'));
 const PatientProfile   = lazy(() => import('./pages/patient/PatientProfile'));
+
+// Doctor / Clinical staff portal
+const DoctorDashboard  = lazy(() => import('./pages/doctor/DoctorDashboard'));
 
 // Org dashboard
 const OrgDashboard     = lazy(() => import('./pages/org/OrgDashboard'));
@@ -56,8 +60,21 @@ function AppRoutes() {
         <Route path="/" element={<Landing />} />
         <Route path="/auth/patient/login"    element={<PatientLogin />} />
         <Route path="/auth/patient/register" element={<PatientRegister />} />
+        <Route path="/auth/doctor/login"     element={<DoctorLogin />} />
+        <Route path="/auth/staff/login"      element={<DoctorLogin />} />
         <Route path="/auth/org/login"        element={<OrgLogin />} />
         <Route path="/auth/org/register"     element={<OrgRegister />} />
+
+        {/* Doctor / Clinical staff portal — protected */}
+        <Route
+          element={
+            <ProtectedRoute role="doctor">
+              <RootLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/doctor" element={<DoctorDashboard />} />
+        </Route>
 
         {/* Patient portal — protected */}
         <Route

@@ -19,6 +19,7 @@ import com.healthqueue.models.Types.CreateStaffParams;
 import com.healthqueue.models.Types.CreateDoctorSessionParams;
 import com.healthqueue.models.Types.DatabaseException;
 import com.healthqueue.models.Values.Doctor;
+import com.healthqueue.models.Values.DoctorProfile;
 import com.healthqueue.models.Values.GetDoctorLogin;
 
 public class DoctorModel {
@@ -169,6 +170,25 @@ public class DoctorModel {
                                 .isAvailable(r.getIsAvailable())
                                 .build();
                     });
+        } catch (Exception e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public DoctorProfile getProfile(long id) throws DatabaseException {
+        try {
+            return dsl.select(DOCTORS.ID, DOCTORS.FIRST_NAME, DOCTORS.LAST_NAME, DOCTORS.SPECIALTY, DOCTORS.EMAIL, ORGANIZATIONS.NAME)
+                    .from(DOCTORS)
+                    .join(BRANCHES).on(DOCTORS.BRANCH_ID.eq(BRANCHES.ID))
+                    .join(ORGANIZATIONS).on(BRANCHES.ORGANIZATION_ID.eq(ORGANIZATIONS.ID))
+                    .where(DOCTORS.ID.eq(id))
+                    .fetchOne(r -> new DoctorProfile(
+                            r.get(DOCTORS.ID),
+                            r.get(DOCTORS.FIRST_NAME),
+                            r.get(DOCTORS.LAST_NAME),
+                            r.get(DOCTORS.SPECIALTY),
+                            r.get(DOCTORS.EMAIL),
+                            r.get(ORGANIZATIONS.NAME)));
         } catch (Exception e) {
             throw new DatabaseException(e);
         }

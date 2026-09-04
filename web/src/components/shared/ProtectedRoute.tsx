@@ -15,13 +15,20 @@ export function ProtectedRoute({ children, role }: ProtectedRouteProps) {
 
   if (!authRole) {
     // Not authenticated at all
-    const loginPath = role === 'patient' ? '/auth/patient/login' : '/auth/org/login';
+    const loginPath =
+      role === 'patient'
+        ? '/auth/patient/login'
+        : role === 'doctor'
+        ? '/auth/staff/login'
+        : '/auth/org/login';
     return <Navigate to={loginPath} replace />;
   }
 
   if (authRole !== role) {
     // Wrong role — redirect to the correct portal
-    return <Navigate to={authRole === 'patient' ? '/patient' : '/org'} replace />;
+    const dashboardPath =
+      authRole === 'patient' ? '/patient' : authRole === 'doctor' ? '/doctor' : '/org';
+    return <Navigate to={dashboardPath} replace />;
   }
 
   return <>{children}</>;

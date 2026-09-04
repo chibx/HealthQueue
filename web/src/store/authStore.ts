@@ -6,6 +6,7 @@ import type { UserRole } from '../types';
 interface AuthState {
   userId: string | null;
   orgId: string | null;
+  doctorId: number | null;
   userName: string | null;
   userEmail: string | null;
   role: UserRole | null;
@@ -16,6 +17,7 @@ interface AuthState {
   initialize: () => Promise<void>;
   setPatient: (userId: string, name?: string, email?: string) => void;
   setOrg: (orgId: string, name?: string, email?: string) => void;
+  setDoctor: (doctorId: number, name?: string, email?: string) => void;
   clear: () => void;
 }
 
@@ -24,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       userId: null,
       orgId: null,
+      doctorId: null,
       userName: null,
       userEmail: null,
       role: null,
@@ -35,24 +38,34 @@ export const useAuthStore = create<AuthState>()(
         
         const tryWhoami = async () => {
           const data = await authApi.whoami();
-          if (data.user) {
+          if (data.doctor) {
+            try {
+              const profile = await authApi.getDoctorProfile();
+              const fullName = profile?.fullName || `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || 'Dr. Medical Staff';
+              const email = profile?.email || get().userEmail || '';
+              set({ doctorId: data.doctor, userId: null, orgId: null, role: 'doctor', userName: fullName, userEmail: email });
+            } catch (err) {
+              set({ doctorId: data.doctor, userId: null, orgId: null, role: 'doctor', userName: get().userName || 'Dr. Medical Staff' });
+            }
+            return true;
+          } else if (data.user) {
             try {
               const profile = await authApi.getPatientProfile();
-              const fullName = profile?.fullName || profile?.full_name || (profile?.firstName && profile?.lastName ? `${profile.firstName} ${profile.lastName}` : null) || get().userName || 'Jane Doe';
-              const email = profile?.email || get().userEmail || 'jane@example.com';
-              set({ userId: data.user, orgId: null, role: 'patient', userName: fullName, userEmail: email });
+              const fullName = profile?.fullName || `${profile?.firstName ?? ''} ${profile?.lastName ?? ''}`.trim() || 'Patient Member';
+              const email = profile?.email || get().userEmail || '';
+              set({ userId: data.user, orgId: null, doctorId: null, role: 'patient', userName: fullName, userEmail: email });
             } catch (err) {
-              set({ userId: data.user, orgId: null, role: 'patient', userName: get().userName || 'Jane Doe' });
+              set({ userId: data.user, orgId: null, doctorId: null, role: 'patient', userName: get().userName || 'Patient Member' });
             }
             return true;
           } else if (data.org) {
             try {
               const profile = await authApi.getOrgProfile();
-              const name = profile?.name || profile?.organizationName || profile?.organization_name || get().userName || 'City General Hospital';
-              const email = profile?.email || get().userEmail || 'admin@hospital.com';
-              set({ userId: null, orgId: data.org, role: 'organization', userName: name, userEmail: email });
+              const name = profile?.name || 'Medical Centre';
+              const email = profile?.email || get().userEmail || '';
+              set({ userId: null, orgId: data.org, doctorId: null, role: 'organization', userName: name, userEmail: email });
             } catch (err) {
-              set({ userId: null, orgId: data.org, role: 'organization', userName: get().userName || 'City General Hospital' });
+              set({ userId: null, orgId: data.org, doctorId: null, role: 'organization', userName: get().userName || 'Medical Centre' });
             }
             return true;
           }
@@ -72,6 +85,10 @@ export const useAuthStore = create<AuthState>()(
               await authApi.refreshPatient();
               const success = await tryWhoami();
               if (!success) get().clear();
+            } else if (role === 'doctor') {
+              await authApi.refreshDoctor();
+              const success = await tryWhoami();
+              if (!success) get().clear();
             } else if (role === 'organization') {
               await authApi.refreshOrganization();
               const success = await tryWhoami();
@@ -87,21 +104,34 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      setPatient: (userId: string, name = 'Jane Doe', email = 'jane@example.com') =>
+      setPatient: (userId: string, name = 'Patient Member', email = '') =>
         set({
           userId,
           orgId: null,
+          doctorId: null,
           role: 'patient',
           userName: name,
           userEmail: email,
           isInitialized: true,
         }),
 
-      setOrg: (orgId: string, name = 'City General Hospital', email = 'admin@hospital.com') =>
+      setOrg: (orgId: string, name = 'Medical Centre', email = '') =>
         set({
           userId: null,
           orgId,
+          doctorId: null,
           role: 'organization',
+          userName: name,
+          userEmail: email,
+          isInitialized: true,
+        }),
+
+      setDoctor: (doctorId: number, name = 'Dr. Medical Staff', email = '') =>
+        set({
+          userId: null,
+          orgId: null,
+          doctorId,
+          role: 'doctor',
           userName: name,
           userEmail: email,
           isInitialized: true,
@@ -111,6 +141,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           userId: null,
           orgId: null,
+          doctorId: null,
           userName: null,
           userEmail: null,
           role: null,
@@ -121,6 +152,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         userId: state.userId,
         orgId: state.orgId,
+        doctorId: state.doctorId,
         userName: state.userName,
         userEmail: state.userEmail,
         role: state.role,

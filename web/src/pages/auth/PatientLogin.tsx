@@ -88,11 +88,19 @@ export default function PatientLogin() {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200">
-            Are you a clinic administrator?{' '}
-            <Link to="/auth/org/login" className="text-white font-bold underline hover:text-teal-100">
-              Clinic Portal →
-            </Link>
+          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200 flex flex-col gap-1">
+            <span>
+              Doctor or nurse?{' '}
+              <Link to="/auth/staff/login" className="text-white font-bold underline hover:text-teal-100">
+                Staff Portal →
+              </Link>
+            </span>
+            <span>
+              Clinic administrator?{' '}
+              <Link to="/auth/org/login" className="text-white font-bold underline hover:text-teal-100">
+                Clinic Portal →
+              </Link>
+            </span>
           </div>
         </div>
 

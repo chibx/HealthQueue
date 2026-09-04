@@ -59,10 +59,32 @@ public class ServerResponse {
             @JsonProperty("email") String email) {
     }
 
+    public record PatientProfileResponse(
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("fullName") String fullName,
+            @JsonProperty("email") String email) {
+    }
+
     public record OrganizationResponse(
             @JsonProperty("id") UUID id,
             @JsonProperty("name") String name,
             @JsonProperty("registrationCode") String registrationCode) {
+    }
+
+    public record OrganizationProfileResponse(
+            @JsonProperty("name") String name,
+            @JsonProperty("email") String email) {
+    }
+
+    public record DoctorProfileResponse(
+            @JsonProperty("id") long id,
+            @JsonProperty("firstName") String firstName,
+            @JsonProperty("lastName") String lastName,
+            @JsonProperty("fullName") String fullName,
+            @JsonProperty("specialty") String specialty,
+            @JsonProperty("email") String email,
+            @JsonProperty("organizationName") String organizationName) {
     }
 
     public record BranchResponse(

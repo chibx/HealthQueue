@@ -90,4 +90,48 @@ public class Values {
             this.distanceInMeters = distance;
         }
     }
+
+    public static class PatientProfile {
+        public final String firstName;
+        public final String lastName;
+        public final String fullName;
+        public final String email;
+
+        public PatientProfile(String firstName, String lastName, String email) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.fullName = ((firstName != null ? firstName : "") + (lastName != null ? " " + lastName : "")).trim();
+            this.email = email;
+        }
+    }
+
+    public static class OrgProfile {
+        public final String name;
+        public final String email;
+
+        public OrgProfile(String name, String email) {
+            this.name = name;
+            this.email = email;
+        }
+    }
+
+    public static class DoctorProfile {
+        public final long id;
+        public final String firstName;
+        public final String lastName;
+        public final String fullName;
+        public final String specialty;
+        public final String email;
+        public final String organizationName;
+
+        public DoctorProfile(long id, String firstName, String lastName, String specialty, String email, String organizationName) {
+            this.id = id;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.fullName = ((firstName != null ? firstName : "") + (lastName != null ? " " + lastName : "")).trim();
+            this.specialty = specialty;
+            this.email = email;
+            this.organizationName = organizationName;
+        }
+    }
 }
