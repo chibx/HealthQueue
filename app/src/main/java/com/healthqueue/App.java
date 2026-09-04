@@ -8,6 +8,7 @@ import com.healthqueue.controllers.DoctorController;
 import java.nio.file.Paths;
 
 import com.healthqueue.controllers.AppointmentController;
+import com.healthqueue.controllers.ProfileController;
 import com.healthqueue.controllers.VisitController;
 import com.healthqueue.middlewares.Middlewares;
 import com.healthqueue.utils.ExceptionHandler;
@@ -48,6 +49,9 @@ public class App {
                 Spark.post("/patient/login", AuthController::LoginPatient);
                 Spark.post("/patient/refresh", AuthController::RefreshPatient);
                 Spark.post("/patient/logout", AuthController::LogoutPatient);
+                Spark.post("/doctor/login", AuthController::LoginDoctor);
+                Spark.post("/doctor/refresh", AuthController::RefreshDoctor);
+                Spark.post("/doctor/logout", AuthController::LogoutDoctor);
 
                 Spark.post("/organization/register", AuthController::RegisterOrganization);
                 Spark.post("/organization/login", AuthController::LoginOrganization);
@@ -55,6 +59,13 @@ public class App {
                 Spark.post("/organization/logout", AuthController::LogoutOrganization);
 
                 Spark.get("/whoami", AuthController::Whoami);
+            });
+
+            // PROFILE ROUTES
+            Spark.path("/profile", () -> {
+                Spark.get("/patient", ProfileController::GetPatientProfile);
+                Spark.get("/organization", ProfileController::GetOrganizationProfile);
+                Spark.get("/doctor", ProfileController::GetDoctorProfile);
             });
 
             // BRANCH ROUTES

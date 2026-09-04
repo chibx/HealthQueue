@@ -14,6 +14,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { useAuthStore } from '../store/authStore';
+import { authApi } from '../api/auth';
 
 const NAV_LINKS = [
   { href: '#features', label: 'Features' },
@@ -40,6 +42,30 @@ export default function Landing() {
   const [simulatedWait, setSimulatedWait] = useState(12);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const role = useAuthStore((s) => s.role);
+  const userName = useAuthStore((s) => s.userName);
+  const clear = useAuthStore((s) => s.clear);
+
+  const dashboardPath =
+    role === 'patient' ? '/patient' : role === 'doctor' ? '/doctor' : role === 'organization' ? '/org' : null;
+  const roleLabel =
+    role === 'patient'
+      ? 'Student'
+      : role === 'doctor'
+      ? 'Medical Staff'
+      : role === 'organization'
+      ? 'Clinic Admin'
+      : '';
+
+  const handleLogout = async () => {
+    try {
+      if (role === 'patient') await authApi.logoutPatient();
+      else if (role === 'doctor') await authApi.logoutDoctor();
+      else if (role === 'organization') await authApi.logoutOrganization();
+    } catch {}
+    clear();
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,23 +105,54 @@ export default function Landing() {
           </nav>
 
           {/* Desktop CTAs */}
-          <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth/patient/login">
-              <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200">
-                Student login
-              </Button>
-            </Link>
-            <Link to="/auth/org/login">
-              <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200">
-                Staff login
-              </Button>
-            </Link>
-            <Link to="/auth/patient/register">
-              <Button variant="primary" size="sm" className="rounded-full bg-[#00685b] text-white">
-                Get started
-              </Button>
-            </Link>
-          </div>
+          {role && dashboardPath ? (
+            <div className="hidden md:flex items-center gap-3">
+              <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-[#e6f4f1] text-[#00685b] text-xs font-bold border border-[#b2e2d8]">
+                <div className="w-6 h-6 rounded-full bg-[#00685b] text-white flex items-center justify-center text-[10px] font-extrabold shadow-2xs">
+                  {userName ? userName[0].toUpperCase() : 'U'}
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-slate-900 text-xs font-bold leading-tight">{userName || 'User'}</span>
+                  <span className="text-[10px] text-[#00685b] font-medium leading-tight">{roleLabel}</span>
+                </div>
+              </div>
+              <Link to={dashboardPath}>
+                <Button variant="primary" size="sm" className="rounded-full bg-[#00685b] text-white flex items-center gap-1.5 shadow-sm">
+                  Go to Dashboard
+                  <ChevronRight size={14} />
+                </Button>
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="text-xs text-slate-500 hover:text-rose-600 font-medium px-2 py-1 transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <Link to="/auth/patient/login">
+                <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200 text-xs">
+                  Student login
+                </Button>
+              </Link>
+              <Link to="/auth/staff/login">
+                <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200 text-xs">
+                  Staff login
+                </Button>
+              </Link>
+              <Link to="/auth/org/login">
+                <Button variant="outline" size="sm" className="rounded-full text-slate-700 border-slate-200 text-xs">
+                  Clinic portal
+                </Button>
+              </Link>
+              <Link to="/auth/patient/register">
+                <Button variant="primary" size="sm" className="rounded-full bg-[#00685b] text-white text-xs">
+                  Get started
+                </Button>
+              </Link>
+            </div>
+          )}
 
           {/* Mobile hamburger */}
           <button
@@ -120,19 +177,50 @@ export default function Landing() {
                 {l.label}
               </a>
             ))}
-            <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
-              <Link to="/auth/patient/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full rounded-full">Student login</Button>
-              </Link>
-              <Link to="/auth/org/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" size="sm" className="w-full rounded-full">Staff login</Button>
-              </Link>
-              <Link to="/auth/patient/register" onClick={() => setMobileOpen(false)}>
-                <Button variant="primary" size="sm" className="w-full rounded-full bg-[#00685b] text-white">
-                  Get started — it's free
-                </Button>
-              </Link>
-            </div>
+            {role && dashboardPath ? (
+              <div className="border-t border-slate-100 pt-4 flex flex-col gap-3">
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#e6f4f1] border border-[#b2e2d8]">
+                  <div className="w-9 h-9 rounded-full bg-[#00685b] text-white flex items-center justify-center font-bold text-xs">
+                    {userName ? userName[0].toUpperCase() : 'U'}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-slate-900 text-sm">{userName || 'Active User'}</span>
+                    <span className="text-xs text-[#00685b] font-medium">{roleLabel}</span>
+                  </div>
+                </div>
+                <Link to={dashboardPath} onClick={() => setMobileOpen(false)}>
+                  <Button variant="primary" size="sm" className="w-full rounded-full bg-[#00685b] text-white font-bold">
+                    Go to Dashboard →
+                  </Button>
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="w-full text-center text-xs text-rose-600 font-semibold py-2"
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-slate-100 pt-4 flex flex-col gap-2">
+                <Link to="/auth/patient/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full rounded-full">Student login</Button>
+                </Link>
+                <Link to="/auth/staff/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full rounded-full">Staff (Doctors/Nurses) login</Button>
+                </Link>
+                <Link to="/auth/org/login" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" size="sm" className="w-full rounded-full">Clinic Portal login</Button>
+                </Link>
+                <Link to="/auth/patient/register" onClick={() => setMobileOpen(false)}>
+                  <Button variant="primary" size="sm" className="w-full rounded-full bg-[#00685b] text-white">
+                    Get started — it's free
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </header>
@@ -155,19 +243,35 @@ export default function Landing() {
             Book appointments at the UNILAG Medical Centre, track your live queue position, and arrive exactly when care is ready — without the wait.
           </p>
 
-          <div className="flex flex-wrap gap-3 items-center">
-            <Link to="/auth/patient/register">
-              <Button size="lg" className="bg-[#00685b] hover:bg-[#005247] text-white rounded-full px-7 shadow-lg shadow-teal-900/15">
-                Book an appointment
-              </Button>
-            </Link>
-            <Link to="/auth/org/login">
-              <Button size="lg" variant="outline" className="bg-white text-slate-700 border-slate-200 hover:bg-slate-50 rounded-full px-7">
-                Medical Centre Staff
-                <ChevronRight size={16} className="ml-1" />
-              </Button>
-            </Link>
-          </div>
+          {role && dashboardPath ? (
+            <div className="flex flex-wrap gap-3 items-center">
+              <Link to={dashboardPath}>
+                <Button size="lg" className="bg-[#00685b] hover:bg-[#005247] text-white rounded-full px-8 shadow-lg shadow-teal-900/15 flex items-center gap-2">
+                  Go to {roleLabel} Dashboard
+                  <ChevronRight size={18} />
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3 items-center">
+              <Link to="/auth/patient/register">
+                <Button size="lg" className="bg-[#00685b] hover:bg-[#005247] text-white rounded-full px-7 shadow-lg shadow-teal-900/15">
+                  Book an appointment
+                </Button>
+              </Link>
+              <Link to="/auth/staff/login">
+                <Button size="lg" variant="outline" className="bg-white text-slate-700 border-slate-200 hover:bg-slate-50 rounded-full px-7 flex items-center gap-1">
+                  Medical Staff Portal
+                  <ChevronRight size={16} />
+                </Button>
+              </Link>
+              <Link to="/auth/org/login">
+                <Button size="lg" variant="outline" className="bg-white text-slate-700 border-slate-200 hover:bg-slate-50 rounded-full px-6">
+                  Clinic Admin
+                </Button>
+              </Link>
+            </div>
+          )}
 
           {/* Social proof row */}
           <div className="mt-10 flex items-center gap-6 text-xs text-slate-400">

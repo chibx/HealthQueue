@@ -72,7 +72,12 @@ export async function apiFetch<T = void>(
           const role = useAuthStore.getState().role;
           if (!role) return false;
           
-          const refreshPath = role === 'patient' ? '/auth/patient/refresh' : '/auth/organization/refresh';
+          const refreshPath =
+            role === 'patient'
+              ? '/auth/patient/refresh'
+              : role === 'doctor'
+              ? '/auth/doctor/refresh'
+              : '/auth/organization/refresh';
           const refreshRes = await fetch(`${BASE_URL}${refreshPath}`, {
             method: 'POST',
             credentials: 'include',

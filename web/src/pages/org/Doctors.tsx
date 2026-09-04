@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Stethoscope, User, Building2 } from 'lucide-react';
+import { Plus, Stethoscope, User, Building2, Mail, Lock, ShieldCheck } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,6 +16,8 @@ const schema = z.object({
   firstName: z.string().min(1, 'First name required'),
   lastName: z.string().min(1, 'Last name required'),
   specialty: z.string().min(1, 'Specialty required'),
+  email: z.string().email('Valid staff email required'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(20),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -108,6 +110,32 @@ export default function Doctors() {
             error={errors.specialty?.message}
             {...register('specialty')}
           />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input
+              id="email"
+              label="Staff Email"
+              type="email"
+              placeholder="dr.sarah@unilagmed.edu.ng"
+              leftIcon={<Mail size={14} />}
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <Input
+              id="password"
+              label="Account Password"
+              type="password"
+              placeholder="••••••••"
+              leftIcon={<Lock size={14} />}
+              error={errors.password?.message}
+              {...register('password')}
+            />
+          </div>
+
+          <div className="flex items-start gap-2 p-3 bg-teal-50/80 border border-teal-200/80 rounded-xl text-[11px] text-teal-800 leading-relaxed">
+            <ShieldCheck size={16} className="text-[#00685b] shrink-0 mt-0.5" />
+            <span>Staff members (doctors and nurses) will sign in to their portal using your organization's name, this email address, and their password.</span>
+          </div>
 
           {errors.root && (
             <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3.5 py-2.5 rounded-xl">

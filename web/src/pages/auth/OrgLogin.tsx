@@ -87,11 +87,19 @@ export default function OrgLogin() {
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200">
-            Are you a patient?{' '}
-            <Link to="/auth/patient/login" className="text-white font-bold underline hover:text-teal-100">
-              Patient Portal →
-            </Link>
+          <div className="mt-8 pt-6 border-t border-teal-800/60 text-[11px] text-teal-200 flex flex-col gap-1">
+            <span>
+              Are you a patient?{' '}
+              <Link to="/auth/patient/login" className="text-white font-bold underline hover:text-teal-100">
+                Patient Portal →
+              </Link>
+            </span>
+            <span>
+              Are you a doctor or nurse?{' '}
+              <Link to="/auth/staff/login" className="text-white font-bold underline hover:text-teal-100">
+                Staff Portal →
+              </Link>
+            </span>
           </div>
         </div>
 

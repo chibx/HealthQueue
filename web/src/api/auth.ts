@@ -5,6 +5,10 @@ import type {
   PatientLoginRequest,
   OrgRegisterRequest,
   OrgLoginRequest,
+  DoctorLoginRequest,
+  PatientProfileResponse,
+  OrgProfileResponse,
+  DoctorProfileResponse,
 } from '../types';
 
 export const authApi = {
@@ -34,14 +38,27 @@ export const authApi = {
   logoutOrganization: () =>
     post<void>('/auth/organization/logout'),
 
+  // ---- Staff / Doctor ----
+  loginDoctor: (body: DoctorLoginRequest) =>
+    post<void>('/auth/doctor/login', body),
+
+  refreshDoctor: () =>
+    post<void>('/auth/doctor/refresh'),
+
+  logoutDoctor: () =>
+    post<void>('/auth/doctor/logout'),
+
   // ---- Shared ----
   whoami: () =>
     get<WhoamiResponse>('/auth/whoami'),
 
   // ---- Profile ----
   getPatientProfile: () =>
-    get<any>('/profile/patient'),
+    get<PatientProfileResponse>('/profile/patient'),
 
   getOrgProfile: () =>
-    get<any>('/profile/organization'),
+    get<OrgProfileResponse>('/profile/organization'),
+
+  getDoctorProfile: () =>
+    get<DoctorProfileResponse>('/profile/doctor'),
 };
